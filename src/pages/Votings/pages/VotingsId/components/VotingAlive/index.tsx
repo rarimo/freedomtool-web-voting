@@ -1,104 +1,69 @@
-import {
-  alpha,
-  Button,
-  Paper,
-  Stack,
-  StackProps,
-  styled,
-  Typography,
-  useTheme,
-} from '@mui/material'
+import { alpha, Button, Paper, Stack, StackProps, Typography, useTheme } from '@mui/material'
 import { providers } from 'ethers'
-import { ChangeEvent, useCallback, useState } from 'react'
+import { useCallback, useState } from 'react'
 
 import {
   AppVoting,
+  ClaimTypes,
   getCommitment,
   getVoteZKP,
   poseidonHash,
+  ProofRequestResponse,
   SecretPair,
   vote,
 } from '@/api/modules/verify'
+import { NoDataViewer } from '@/common'
 import { useWeb3Context } from '@/contexts'
-import { Icons } from '@/enums'
 import { ErrorHandler, formatDateDMY } from '@/helpers'
+import { useAppRequest, useAppVotingDetails } from '@/pages/Votings/hooks'
+import { AppRequestModal } from '@/pages/Votings/pages/VotingsId/components'
 import { VotingProcessModal } from '@/pages/Votings/pages/VotingsId/components/VotingAlive/components'
 import { VotingRegistration__factory } from '@/types'
-import { UiIcon, UiTooltip } from '@/ui'
+import { UiTooltip } from '@/ui'
 
 type Props = StackProps & {
   appVoting: AppVoting
 }
 
-const VisuallyHiddenInput = styled('input')({
-  clip: 'rect(0 0 0 0)',
-  clipPath: 'inset(50%)',
-  height: 1,
-  overflow: 'hidden',
-  position: 'absolute',
-  bottom: 0,
-  left: 0,
-  whiteSpace: 'nowrap',
-  width: 1,
-})
-
-// TODO: 4 Этап - Голосование через Web Voting
-//  Пользователь загружает свои ключи для голосования в веб приложение
-//  Пользователь видит список голосований
-//    - Список можно взять на контракте регистри фильтруя по адресу создателя
-//    - В нашем случае будет только одно голосование
-//  Пользователь выбирает кандидата
-//    - Список айдишников (hash данных) кандидатов будет в контракте
-//    - По каждому хешу будет инфа в IPFS
-//    - ссылка на IPFS в метадате контракта
-//  Web Voting генерирует пруф3 (из ключей, айди кандидата и айди голосования)
-//  Web Voting собирает и отправляет на бекенд транзакцию, в кол дате только пруф3
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export default function VotingAlive({ appVoting, ...rest }: Props) {
   const { palette, spacing } = useTheme()
 
   const { provider } = useWeb3Context()
 
+  const [isAppRequestModalShown, setIsAppRequestModalShown] = useState(false)
   const [isPending, setIsPending] = useState(false)
 
-  const [votingSecret, setVotingSecret] = useState<SecretPair>()
+  const { getIsUserRegistered } = useAppVotingDetails(appVoting)
+
+  const { request, start, cancelSubscription } = useAppRequest({
+    claimType: ClaimTypes.AuthClaim,
+    reason: '', // FIXME: use real data
+    message: '', // FIXME: use real data
+    sender: '', // FIXME: use real data
+  })
 
   const [selectedCandidateHash, setSelectedCandidateHash] = useState<string>('')
 
-  const handleUploadFile = useCallback(async (e: ChangeEvent<HTMLInputElement>) => {
-    if (!e.currentTarget?.files?.[0]) return
-
-    const [file] = e.currentTarget.files
-
-    const reader = new FileReader() // File reader to read the file
-
-    reader.readAsText(file)
-
-    reader.onload = async () => {
-      const secret = reader.result as string
-
-      setVotingSecret(JSON.parse(secret))
-    }
-  }, [])
-
   const voteForCandidate = useCallback(
-    async (candidateHash: string) => {
+    async (proofResponse: ProofRequestResponse, secrets: SecretPair, candidateHash: string) => {
       setIsPending(true)
 
       try {
         if (!appVoting.voting?.contract_address)
           throw new TypeError('Voting contract address is not set')
 
-        if (!votingSecret) throw new TypeError('Voting secret is not set')
-
         if (!provider?.rawProvider) throw new TypeError('Provider is not connected')
+
+        if (!(await getIsUserRegistered(proofResponse))) {
+          throw new Error('User is not registered') // TODO: add notification
+        }
 
         const registrationInstance = VotingRegistration__factory.connect(
           appVoting.registration?.contract_address,
           provider.rawProvider as unknown as providers.JsonRpcProvider,
         )
 
-        const commitment = getCommitment(votingSecret)
+        const commitment = getCommitment(secrets)
 
         const commitmentIndex = poseidonHash(commitment)
 
@@ -107,7 +72,7 @@ export default function VotingAlive({ appVoting, ...rest }: Props) {
         const onchainProof = await registrationInstance.getProof(commitmentIndex)
 
         const zkpProof = await getVoteZKP(
-          votingSecret,
+          secrets,
           root,
           candidateHash,
           appVoting.voting.contract_address,
@@ -124,9 +89,22 @@ export default function VotingAlive({ appVoting, ...rest }: Props) {
     [
       appVoting.registration?.contract_address,
       appVoting.voting?.contract_address,
+      getIsUserRegistered,
       provider?.rawProvider,
-      votingSecret,
     ],
+  )
+
+  const handleVote = useCallback(
+    async (candidateHash: string) => {
+      await start(async (proofResponse, secrets) => {
+        await voteForCandidate(proofResponse, secrets, candidateHash)
+
+        setIsAppRequestModalShown(false)
+      })
+
+      setIsAppRequestModalShown(true)
+    },
+    [start, voteForCandidate],
   )
 
   const isCandidateSelected = useCallback(
@@ -134,132 +112,95 @@ export default function VotingAlive({ appVoting, ...rest }: Props) {
     [selectedCandidateHash],
   )
 
-  if (!votingSecret) {
-    return (
-      <Stack {...rest}>
-        <Paper>
-          <Stack spacing={6}>
-            <Stack direction='row' spacing={4}>
-              <Typography variant='h6' fontWeight='bold'>
-                Your status:
-              </Typography>
-
-              <Stack direction='row' alignItems='center' spacing={2} color={palette.warning.main}>
-                <UiIcon name={Icons.DecorQuestion} size={4} />
-                <Typography fontWeight='bold'>Verification needed</Typography>
-              </Stack>
-            </Stack>
-
-            <Stack spacing={2}>
-              <Stack direction='row' alignItems='center' spacing={2}>
-                <UiIcon name={Icons.DecorQuestion} size={4} color={palette.warning.main} />
-                <Typography variant='body2'>Are a X authorised person</Typography>
-              </Stack>
-
-              <Stack direction='row' alignItems='center' spacing={2}>
-                <UiIcon name={Icons.DecorQuestion} size={4} color={palette.warning.main} />
-                <Typography variant='body2'>Are 18 y.o</Typography>
-              </Stack>
-            </Stack>
-
-            <Button
-              component='label'
-              role={undefined}
-              tabIndex={-1}
-              startIcon={<UiIcon componentName='upload' />}
-              sx={{ minWidth: spacing(80), alignSelf: 'flex-start' }}
-            >
-              UPLOAD KEYS
-              <VisuallyHiddenInput
-                type='file'
-                accept={'.txt'}
-                multiple={false}
-                onChange={e => {
-                  handleUploadFile(e)
-                }}
-              />
-            </Button>
-          </Stack>
-        </Paper>
-      </Stack>
-    )
-  }
-
   return (
     <Stack {...rest}>
       <Paper>
         <Stack spacing={4}>
           <Typography>Select Answer</Typography>
-          {Object.entries(appVoting!.voting!.candidates).map(([hash, details], idx) => (
-            <UiTooltip
-              key={idx}
-              placement='top'
-              title={
-                <Stack spacing={2}>
-                  <Typography>{details.description}</Typography>
-                  <Typography>Birthday: {formatDateDMY(details.birthday_date)}</Typography>
-                </Stack>
-              }
-            >
-              <Stack
-                direction='row'
-                alignItems='center'
-                spacing={4}
-                position='relative'
-                p={4}
-                bgcolor={
-                  isCandidateSelected(hash)
-                    ? palette.primary.main
-                    : alpha(palette.primary.main, 0.05)
+          {appVoting?.voting?.candidates ? (
+            Object.entries(appVoting.voting.candidates).map(([hash, details], idx) => (
+              <UiTooltip
+                key={idx}
+                placement='top'
+                title={
+                  <Stack spacing={2}>
+                    <Typography>{details.description}</Typography>
+                    <Typography>Birthday: {formatDateDMY(details.birthday_date)}</Typography>
+                  </Stack>
                 }
-                borderRadius={spacing(4)}
               >
                 <Stack
-                  justifyContent='center'
+                  direction='row'
                   alignItems='center'
-                  width={spacing(9)}
-                  height={spacing(9)}
+                  spacing={4}
+                  position='relative'
+                  p={4}
                   bgcolor={
                     isCandidateSelected(hash)
-                      ? palette.common.white
+                      ? palette.primary.main
                       : alpha(palette.primary.main, 0.05)
                   }
-                  borderRadius='50%'
+                  borderRadius={spacing(4)}
                 >
-                  <Typography color={palette.text.secondary} fontWeight='bold'>
-                    {idx}
+                  <Stack
+                    justifyContent='center'
+                    alignItems='center'
+                    width={spacing(9)}
+                    height={spacing(9)}
+                    bgcolor={
+                      isCandidateSelected(hash)
+                        ? palette.common.white
+                        : alpha(palette.primary.main, 0.05)
+                    }
+                    borderRadius='50%'
+                  >
+                    <Typography color={palette.text.secondary} fontWeight='bold'>
+                      {idx}
+                    </Typography>
+                  </Stack>
+                  <Typography
+                    color={
+                      isCandidateSelected(hash) ? palette.common.white : palette.text.secondary
+                    }
+                    fontWeight='bold'
+                  >
+                    {details.name}
                   </Typography>
+
+                  <Button
+                    sx={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      height: '100%',
+                      opacity: 0,
+                    }}
+                    onClick={() => setSelectedCandidateHash(hash)}
+                  />
                 </Stack>
-                <Typography
-                  color={isCandidateSelected(hash) ? palette.common.white : palette.text.secondary}
-                  fontWeight='bold'
-                >
-                  {details.name}
-                </Typography>
+              </UiTooltip>
+            ))
+          ) : (
+            <NoDataViewer title='No Candidates' />
+          )}
 
-                <Button
-                  sx={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: '100%',
-                    height: '100%',
-                    opacity: 0,
-                  }}
-                  onClick={() => setSelectedCandidateHash(hash)}
-                />
-              </Stack>
-            </UiTooltip>
-          ))}
-
-          <Button
-            sx={{ minWidth: spacing(40), alignSelf: 'flex-start' }}
-            onClick={() => voteForCandidate(selectedCandidateHash)}
-            disabled={isPending || !selectedCandidateHash}
-          >
-            CONFIRM
-          </Button>
+          {appVoting?.voting?.candidates && (
+            <Button
+              sx={{ minWidth: spacing(40), alignSelf: 'flex-start' }}
+              onClick={() => handleVote(selectedCandidateHash)}
+              disabled={isPending || !selectedCandidateHash}
+            >
+              CONFIRM
+            </Button>
+          )}
         </Stack>
+
+        <AppRequestModal
+          isShown={isAppRequestModalShown}
+          request={request}
+          cancel={cancelSubscription}
+        />
 
         <VotingProcessModal open={isPending} />
       </Paper>

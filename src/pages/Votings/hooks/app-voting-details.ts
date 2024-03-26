@@ -30,9 +30,19 @@ export const useAppVotingDetails = (pairIdOrInstance: string | AppVoting) => {
     [appVoting],
   )
 
+  const isVotingExist = useMemo(
+    () =>
+      !!appVoting?.voting?.values?.votingStartTime || !!appVoting?.voting?.values?.votingEndTime,
+    [appVoting?.voting?.values?.votingStartTime, appVoting?.voting?.values?.votingEndTime],
+  )
+
   const isRegistrationHasBegun = useMemo(() => {
     return time().isAfter(time(appVoting?.registration?.values.commitmentStartTime.toNumber()))
   }, [appVoting?.registration?.values?.commitmentStartTime])
+
+  const isRegistrationHasEnded = useMemo(() => {
+    return time().isAfter(time(appVoting?.registration?.values.commitmentEndTime.toNumber()))
+  }, [appVoting?.registration?.values.commitmentEndTime])
 
   const isVotingHasBegun = useMemo(() => {
     return time().isAfter(time(appVoting?.voting?.values.votingStartTime.toNumber()))
@@ -56,10 +66,16 @@ export const useAppVotingDetails = (pairIdOrInstance: string | AppVoting) => {
         endTime: formatDateDiff(appVoting?.voting?.values.votingEndTime.toNumber() ?? 0),
       })
 
-    if (isRegistrationHasBegun && !isVotingHasBegun)
-      return t('voting-details.commitment-results-timer', {
-        endTime: formatDateDiff(appVoting?.registration.values.commitmentEndTime.toNumber() ?? 0),
-      })
+    if (isRegistrationHasEnded)
+      return isVotingExist
+        ? t('voting-details.voting-start-timer', {
+            startTime: formatDateDiff(appVoting?.voting?.values.votingStartTime.toNumber() ?? 0),
+          })
+        : t('voting-details.commitment-results-timer', {
+            endTime: formatDateDiff(
+              appVoting?.registration.values.commitmentEndTime.toNumber() ?? 0,
+            ),
+          })
 
     if (isRegistrationHasBegun)
       return t('voting-details.commitment-end-timer', {
@@ -73,8 +89,11 @@ export const useAppVotingDetails = (pairIdOrInstance: string | AppVoting) => {
     appVoting?.registration.values.commitmentEndTime,
     appVoting?.registration.values.commitmentStartTime,
     appVoting?.voting?.values.votingEndTime,
+    appVoting?.voting?.values.votingStartTime,
     isRegistrationHasBegun,
+    isRegistrationHasEnded,
     isVotingEnded,
+    isVotingExist,
     isVotingHasBegun,
     t,
   ])
@@ -111,6 +130,8 @@ export const useAppVotingDetails = (pairIdOrInstance: string | AppVoting) => {
     isRegistrationHasBegun,
     isVotingHasBegun,
     isVotingEnded,
+    isRegistrationHasEnded,
+
     appVotingDesc,
     endTimerMessage,
     getIsUserRegistered,

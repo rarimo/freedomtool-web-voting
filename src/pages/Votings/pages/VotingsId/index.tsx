@@ -25,24 +25,24 @@ export default function VotingsId() {
     appVoting,
     appVotingDesc,
     endTimerMessage,
+
     isVotingEnded,
     isRegistrationHasBegun,
     isVotingHasBegun,
+    isRegistrationHasEnded,
   } = useAppVotingDetails(id)
 
   const VotingComponent = useMemo(() => {
-    return VotingRegistration
-
-    if (!isRegistrationHasBegun) return VotingBeforeRegistration
-
     if (isVotingEnded) return VotingEnded
 
     if (isVotingHasBegun) return VotingAlive
 
-    if (isRegistrationHasBegun) return VotingRegistrationEnd
+    if (isRegistrationHasEnded) return VotingRegistrationEnd
+
+    if (!isRegistrationHasBegun) return VotingBeforeRegistration
 
     return VotingRegistration
-  }, [isVotingHasBegun, isVotingEnded, isRegistrationHasBegun])
+  }, [isVotingEnded, isVotingHasBegun, isRegistrationHasEnded, isRegistrationHasBegun])
 
   if (isVotingsLoading)
     return (
