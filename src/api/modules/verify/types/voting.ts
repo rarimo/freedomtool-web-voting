@@ -5,6 +5,7 @@ export type RegistrationRemarkDetails = {
   chain_id: string
   contract_address: string
   name: string
+  excerpt: string
   description: string
   external_url: string
 }
@@ -19,6 +20,7 @@ export type VotingRemarkDetails = {
   chain_id: string
   contract_address: string
   name: string
+  excerpt: string
   description: string
   external_url: string
 

@@ -1,19 +1,8 @@
-import {
-  Alert,
-  Chip,
-  Paper,
-  Skeleton,
-  Stack,
-  StackProps,
-  Typography,
-  useTheme,
-} from '@mui/material'
+import { Chip, Paper, Stack, StackProps, Typography, useTheme } from '@mui/material'
 import { useMemo } from 'react'
 
 import { AppVoting } from '@/api/modules/verify'
 import { Illustrations } from '@/enums'
-import { useLoading } from '@/hooks'
-import { useAppVotingDetails } from '@/pages/Votings/hooks'
 import { UiIcon, UiIllustration } from '@/ui'
 
 type Props = StackProps & {
@@ -23,39 +12,16 @@ type Props = StackProps & {
 export default function VotingRegistrationEnd({ appVoting, ...rest }: Props) {
   const { palette, spacing } = useTheme()
 
-  const { getIsUserRegistered } = useAppVotingDetails(appVoting)
-
-  const {
-    data: isUserRegistered,
-    isLoading,
-    isLoadingError,
-  } = useLoading(false, getIsUserRegistered, {
-    loadOnMount: true,
-  })
-
   const registeredAmountMsg = useMemo(() => {
-    if (!isUserRegistered)
-      return `${appVoting.registration.counters.totalRegistrations.toNumber()} people already signed`
-
-    return `You and ${appVoting.registration.counters.totalRegistrations.toNumber()} people already signed`
-  }, [appVoting.registration.counters.totalRegistrations, isUserRegistered])
-
-  if (isLoading)
     return (
-      <Stack {...rest}>
-        <Paper
-          sx={{
-            p: spacing(6),
-          }}
-        >
-          <Skeleton />
-          <Skeleton />
-          <Skeleton />
-        </Paper>
-      </Stack>
+      <Typography>
+        <Typography fontWeight='bold'>
+          {appVoting.registration.counters.totalRegistrations.toNumber()}
+        </Typography>{' '}
+        people already signed
+      </Typography>
     )
-
-  if (isLoadingError) return <Alert severity='error'>Loading error... Please reload page</Alert>
+  }, [appVoting.registration.counters.totalRegistrations])
 
   return (
     <Stack {...rest}>

@@ -2,11 +2,11 @@ import { Alert, Button, Divider, Paper, Skeleton, Stack, Typography } from '@mui
 import { useMemo } from 'react'
 import { NavLink, useParams } from 'react-router-dom'
 
-import { NoDataViewer } from '@/common'
+import { LangSwitcher, NoDataViewer } from '@/common'
 import { RoutePaths } from '@/enums'
 import { useVotingsContext } from '@/pages/Votings/contexts'
 import { useAppVotingDetails } from '@/pages/Votings/hooks'
-import { UiIcon } from '@/ui'
+import { UiIcon, UiMarkdown } from '@/ui'
 
 import {
   VotingAlive,
@@ -14,7 +14,6 @@ import {
   VotingEnded,
   VotingRegistration,
   VotingRegistrationEnd,
-  VotingSignIn,
 } from './components'
 
 export default function VotingsId() {
@@ -28,27 +27,22 @@ export default function VotingsId() {
     endTimerMessage,
     isVotingEnded,
     isRegistrationHasBegun,
-    isAuthorized,
     isVotingHasBegun,
   } = useAppVotingDetails(id)
 
   const VotingComponent = useMemo(() => {
-    // Check availability first
-
-    if (isVotingEnded) return VotingEnded
-
-    if (isRegistrationHasBegun && !isVotingHasBegun) return VotingRegistrationEnd
+    return VotingRegistration
 
     if (!isRegistrationHasBegun) return VotingBeforeRegistration
 
-    // For the next steps authorization is required
-
-    if (!isAuthorized) return VotingSignIn
+    if (isVotingEnded) return VotingEnded
 
     if (isVotingHasBegun) return VotingAlive
 
+    if (isRegistrationHasBegun) return VotingRegistrationEnd
+
     return VotingRegistration
-  }, [isAuthorized, isVotingHasBegun, isVotingEnded, isRegistrationHasBegun])
+  }, [isVotingHasBegun, isVotingEnded, isRegistrationHasBegun])
 
   if (isVotingsLoading)
     return (
@@ -83,23 +77,38 @@ export default function VotingsId() {
 
   return (
     <Stack spacing={4}>
-      <Paper>
-        <Stack spacing={6}>
-          <Typography variant='h5'>{appVotingDesc?.name}</Typography>
+      <Stack spacing={6}>
+        <Stack direction='row' justifyContent='space-between' alignItems='center'>
+          <Button
+            component={NavLink}
+            to={RoutePaths.VotingsList}
+            variant='text'
+            startIcon={<UiIcon componentName='chevronLeft' />}
+          >
+            Back
+          </Button>
 
-          <Divider />
-
-          <Stack direction='row' spacing={2} alignItems='center'>
-            <UiIcon componentName='calendarMonth' size={4} />
-            <Typography>{endTimerMessage}</Typography>
-          </Stack>
+          <LangSwitcher />
         </Stack>
-      </Paper>
+
+        <Paper>
+          <Stack spacing={6}>
+            <Typography variant='h5'>{appVotingDesc?.name}</Typography>
+
+            <Divider />
+
+            <Stack direction='row' spacing={2} alignItems='center'>
+              <UiIcon componentName='calendarMonth' size={4} />
+              <Typography>{endTimerMessage}</Typography>
+            </Stack>
+          </Stack>
+        </Paper>
+      </Stack>
 
       {<VotingComponent appVoting={appVoting} />}
 
       <Paper>
-        <Typography variant='body3'>{appVotingDesc?.description}</Typography>
+        <UiMarkdown>{appVotingDesc?.description}</UiMarkdown>
       </Paper>
     </Stack>
   )

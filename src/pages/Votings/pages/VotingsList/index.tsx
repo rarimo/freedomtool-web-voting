@@ -1,16 +1,19 @@
 import { Alert, Paper, Stack } from '@mui/material'
 
-import { NoDataViewer, PageTitles } from '@/common'
+import { LangSwitcher, NoDataViewer, PageTitles } from '@/common'
 import { useVotingsContext } from '@/pages/Votings/contexts'
 
 import { VotingListCard, VotingListCardSkeleton } from './components'
 
 export default function VotingsList() {
-  const { AppVotings, isVotingsLoading, isVotingsLoadingError } = useVotingsContext()
+  const { appVotings, isVotingsLoading, isVotingsLoadingError } = useVotingsContext()
 
   return (
-    <Stack>
-      <PageTitles title={'Active Polls'} />
+    <Stack p={4}>
+      <Stack direction='row' justifyContent='space-between' alignItems='center'>
+        <PageTitles title={'Active Polls'} />
+        <LangSwitcher />
+      </Stack>
 
       {isVotingsLoading ? (
         <Stack mt={6} spacing={6}>
@@ -23,9 +26,9 @@ export default function VotingsList() {
         </Stack>
       ) : isVotingsLoadingError ? (
         <Alert severity='error'>{`There's an error occurred, please, reload page`}</Alert>
-      ) : AppVotings.length ? (
+      ) : appVotings.length ? (
         <Stack mt={6} spacing={6}>
-          {AppVotings.map((appVoting, idx) => (
+          {appVotings.map((appVoting, idx) => (
             <Paper key={idx}>
               <VotingListCard appVoting={appVoting} />
             </Paper>

@@ -18,8 +18,10 @@ export default function VotingListCard({ appVoting, ...rest }: Props) {
   return (
     <Stack {...rest} spacing={6}>
       <Stack spacing={2}>
-        <Typography variant='body1'>{appVotingDesc?.name}</Typography>
-        <Typography variant='body2'>{appVotingDesc?.description}</Typography>
+        <Typography variant='subtitle2'>{appVotingDesc?.name}</Typography>
+        {appVotingDesc?.excerpt && (
+          <Typography variant='subtitle3'>{appVotingDesc?.excerpt}</Typography>
+        )}
       </Stack>
 
       <Divider />
@@ -32,8 +34,8 @@ export default function VotingListCard({ appVoting, ...rest }: Props) {
         spacing={2}
       >
         <Stack direction='row' spacing={2} alignItems='center'>
-          <UiIcon componentName='calendarMonth' size={4} />
-          <Typography>{endTimerMessage}</Typography>
+          <UiIcon componentName='calendarTodayOutlinedIcon' size={4} />
+          <Typography variant='subtitle4'>{endTimerMessage}</Typography>
         </Stack>
         <IconButton
           component={NavLink}

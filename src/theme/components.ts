@@ -347,6 +347,13 @@ export const components: Components<Omit<Theme, 'components'>> = {
       h6: ({ theme }) => ({
         color: theme.palette.text.secondary,
       }),
+
+      subtitle1: ({ theme }) => ({
+        color: theme.palette.text.secondary,
+      }),
+      subtitle2: ({ theme }) => ({
+        color: theme.palette.text.secondary,
+      }),
     },
   },
   MuiTooltip: {

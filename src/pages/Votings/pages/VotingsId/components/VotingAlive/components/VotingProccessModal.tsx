@@ -1,4 +1,4 @@
-import { Chip, Divider, Paper, Stack, Typography, useTheme } from '@mui/material'
+import { Box, Chip, Divider, Paper, Stack, Typography, useTheme } from '@mui/material'
 import { ComponentProps, useState } from 'react'
 import { useEffectOnce } from 'react-use'
 
@@ -56,7 +56,19 @@ export default function VotingProcessModal({ ...rest }: Props) {
           }}
         >
           <Stack spacing={8} p={10} alignItems='center'>
-            <UiIcon componentName='checkCircle' size={28} sx={{ color: palette.success.main }} />
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                borderRadius: '50%',
+                width: spacing(28),
+                height: spacing(28),
+                background: palette.success.main,
+              }}
+            >
+              <UiIcon componentName='check' size={10} sx={{ color: palette.common.white }} />
+            </Box>
             <Stack spacing={3} alignItems='center' textAlign='center'>
               <Typography variant='h5'>Please wait</Typography>
               <Typography variant='body3'>Your choice is non tracable</Typography>
@@ -79,10 +91,13 @@ export default function VotingProcessModal({ ...rest }: Props) {
                         <UiIcon
                           componentName='check'
                           sx={{
-                            color: palette.success.dark,
+                            color: palette.success.main,
                           }}
                         />
                       }
+                      sx={{
+                        color: palette.success.darker,
+                      }}
                       label='Done'
                     />
                   )}

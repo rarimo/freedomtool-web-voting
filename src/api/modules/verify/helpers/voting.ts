@@ -42,6 +42,7 @@ export const fallbackRegistrationRemarkDetails = (params: {
     chain_id: '',
     contract_address: params.contractAddress,
     name: params.contractAddress,
+    excerpt: 'Lorem ipsum dolor sit amet concestetur!',
     description: params.contractAddress,
     external_url: '',
   }
@@ -57,6 +58,7 @@ export const fallbackVotingRemarkDetails = (params: {
     chain_id: '',
     contract_address: params.contractAddress,
     name: params.contractAddress,
+    excerpt: 'Lorem ipsum dolor sit amet concestetur!',
     description: params.contractAddress,
     external_url: '',
 

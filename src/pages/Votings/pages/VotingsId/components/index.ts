@@ -1,6 +1,6 @@
+export { default as AppRequestModal } from './AppRequestModal'
 export { default as VotingAlive } from './VotingAlive'
 export { default as VotingBeforeRegistration } from './VotingBeforeRegistration'
 export { default as VotingEnded } from './VotingEnded'
 export { default as VotingRegistration } from './VotingRegistration'
 export { default as VotingRegistrationEnd } from './VotingRegistrationEnd'
-export { default as VotingSignIn } from './VotingSignIn'

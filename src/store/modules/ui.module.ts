@@ -1,10 +1,12 @@
 import { PaletteMode } from '@mui/material'
 
 import { createStore } from '@/helpers'
+import { type LocaleResources } from '@/locales/resources'
 
 type UiStore = {
   viewportWidth: number
   paletteMode: PaletteMode
+  locale: LocaleResources
 }
 
 export const [uiStore, useUiState] = createStore(
@@ -12,6 +14,7 @@ export const [uiStore, useUiState] = createStore(
   {
     viewportWidth: 0,
     paletteMode: 'light',
+    locale: 'en',
   } as UiStore,
   state => ({
     setViewportWidth: (width: number) => {
@@ -23,6 +26,9 @@ export const [uiStore, useUiState] = createStore(
     clearUiStorage: () => {
       state.paletteMode = 'light'
       state.viewportWidth = 0
+    },
+    setLocale: (locale: LocaleResources) => {
+      state.locale = locale
     },
   }),
 )

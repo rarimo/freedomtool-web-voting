@@ -38,6 +38,7 @@
     "commitment-start-timer": "Registration starts {{startTime}}",
     "commitment-end-timer": "Registration ends {{endTime}}",
     "commitment-results-timer": "Registration has ended",
-    "voting-end-timer": "Voting ends {{endTime}}"
+    "voting-end-timer": "Voting ends {{endTime}}",
+    "voting-ended": "Voting has ended"
   }
 }

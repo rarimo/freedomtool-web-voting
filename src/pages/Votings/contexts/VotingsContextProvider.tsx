@@ -1,19 +1,12 @@
 import { fetcher } from '@distributedlab/fetcher'
-import { ethers, providers } from 'ethers'
-import { createContext, PropsWithChildren, useCallback, useContext, useMemo, useState } from 'react'
+import { constants, providers } from 'ethers'
+import { createContext, PropsWithChildren, useContext } from 'react'
 
 import {
   AppVoting,
-  ClaimTypes,
-  createRequest,
   fallbackRegistrationRemarkDetails,
   fallbackVotingRemarkDetails,
-  generateSecrets,
-  getCommitment,
-  getRequestResponse,
-  ProofRequestResponse,
   RegistrationRemarkDetails,
-  SecretPair,
   VotingRemarkDetails,
   VotingTypes,
 } from '@/api/modules/verify'
@@ -23,45 +16,22 @@ import { useLoading } from '@/hooks'
 import { Voting__factory, VotingRegistration__factory, VotingRegistry__factory } from '@/types'
 
 type VotingsContextValues = {
-  secrets: SecretPair
-  proofResponse: ProofRequestResponse
-  isAuthorized: boolean
-
-  AppVotings: AppVoting[]
+  appVotings: AppVoting[]
   isVotingsLoading: boolean
   isVotingsLoadingError: boolean
-
-  buildAuthRequest: () => Promise<string>
-  cancelSubscription: () => void
 }
 
 const VotingsContext = createContext<VotingsContextValues>({
-  secrets: {} as SecretPair,
-  proofResponse: {} as ProofRequestResponse,
-  isAuthorized: false,
-
-  AppVotings: [],
+  appVotings: [],
   isVotingsLoading: false,
   isVotingsLoadingError: false,
-
-  buildAuthRequest: async () => '',
-  cancelSubscription: () => {},
 })
 
 export const VotingsContextProvider = ({ ...rest }: PropsWithChildren) => {
-  const [secrets, setSecrets] = useState<SecretPair>({} as SecretPair)
-  const [proofResponse, setProofResponse] = useState<ProofRequestResponse>(
-    {} as ProofRequestResponse,
-  )
-
-  const [cancelSubscription, setCancelSubscription] = useState<() => void>(() => {})
-
   const { provider } = useWeb3Context()
 
-  const isAuthorized = useMemo(() => Boolean(proofResponse?.jwz), [proofResponse])
-
   const {
-    data: AppVotings,
+    data: appVotings,
     isLoading: isVotingsLoading,
     isLoadingError: isVotingsLoadingError,
   } = useLoading<AppVoting[]>(
@@ -112,7 +82,7 @@ export const VotingsContextProvider = ({ ...rest }: PropsWithChildren) => {
             })
           }
 
-          const isVotingContractExist = address.toLowerCase() !== ethers.constants.AddressZero
+          const isVotingContractExist = address.toLowerCase() !== constants.AddressZero
 
           if (!isVotingContractExist) {
             return {
@@ -172,47 +142,12 @@ export const VotingsContextProvider = ({ ...rest }: PropsWithChildren) => {
     },
   )
 
-  const buildAuthRequest = useCallback(async () => {
-    const secrets = generateSecrets()
-
-    const commitment = getCommitment(secrets)
-
-    // TODO: upd params
-    const { request, jwtToken } = await createRequest({
-      claimType: ClaimTypes.AuthClaim,
-      reason: 'auth', // FIXME
-      message: commitment, // FIXME
-      sender: 'config.REQUEST_BUILD_SENDER', // FIXME
-    })
-
-    setSecrets(secrets)
-
-    const cancelSubscription = getRequestResponse(
-      request.id,
-      jwtToken,
-      (res: ProofRequestResponse) => {
-        setProofResponse(res)
-      },
-    )
-
-    setCancelSubscription(cancelSubscription)
-
-    return JSON.stringify(request)
-  }, [])
-
   return (
     <VotingsContext.Provider
       value={{
-        secrets,
-        proofResponse,
-        isAuthorized,
-
-        AppVotings,
+        appVotings,
         isVotingsLoading,
         isVotingsLoadingError,
-
-        buildAuthRequest,
-        cancelSubscription,
       }}
       {...rest}
     />

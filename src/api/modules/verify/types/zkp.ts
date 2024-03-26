@@ -1,3 +1,5 @@
+import { ClaimTypes } from '@/api/modules/verify'
+
 export type ProofRequestResponse = {
   updateStateDetails: {
     stateRootHash: string
@@ -19,4 +21,11 @@ export type ProofRequestResponse = {
     }
     merkleProof: string[]
   }
+}
+
+export type AppRequestOpts = {
+  claimType: ClaimTypes
+  reason: string
+  message: string
+  sender: string
 }

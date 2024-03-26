@@ -1,0 +1,28 @@
+{
+  "validations": {
+    "field-error_required": "Пожалуйста, заполните это поле",
+    "field-error_minLength": "Это поле должно содержать минимум {{minLength}} символов",
+    "field-error_maxLength": "Это поле должно содержать максимум {{maxLength}} символов"
+  },
+  "errors": {
+    "default": "Что-то пошло не так"
+  },
+  "notifications": {
+    "default-title-success": "Успех",
+    "default-title-error": "Ошибка",
+    "default-title-warning": "Предупреждение",
+    "default-title-info": "Информация",
+    "default-title-default": "Просто сообщение",
+    "default-message-success": "Действие выполнено успешно",
+    "default-message-error": "Что-то пошло не так",
+    "default-message-warning": "То, что вы делаете, не рекомендуется",
+    "default-message-info": "Что-то происходит. Просто хочу, чтобы вы это знали",
+    "default-message-default": "Просто сообщение"
+  },
+  "voting-details": {
+    "commitment-start-timer": "Регистрация начнётся через {{startTime}}",
+    "commitment-end-timer": "Регистрация закончится через {{endTime}}",
+    "commitment-results-timer": "Регистрация закончилась",
+    "voting-end-timer": "Голосование закончится через {{endTime}}"
+  }
+}

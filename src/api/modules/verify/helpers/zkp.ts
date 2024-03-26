@@ -1,10 +1,13 @@
-import { BytesLike } from '@ethersproject/bytes'
 import { Poseidon } from '@iden3/js-crypto'
-import { ethers } from 'ethers'
+import { BytesLike, utils } from 'ethers'
 import { groth16 } from 'snarkjs'
 import { v4 as uuidv4 } from 'uuid'
 
-import { CLAIM_TYPES_MAP_ON_CHAIN, ClaimTypes, ProofRequestResponse } from '@/api/modules/verify'
+import {
+  AppRequestOpts,
+  CLAIM_TYPES_MAP_ON_CHAIN,
+  ProofRequestResponse,
+} from '@/api/modules/verify'
 import { config } from '@/config'
 import { VerifierHelper } from '@/types/contracts/Voting'
 
@@ -25,23 +28,23 @@ function splitHexIntoChunks(hexString: string, chunkSize = 64) {
 }
 
 export function poseidonHash(data: string): string {
-  data = ethers.utils.hexlify(data)
+  data = utils.hexlify(data)
   const chunks = splitHexIntoChunks(data.replace('0x', ''), 64)
   const inputs = chunks.map(v => BigInt(v))
 
   // FIXME
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
-  return ethers.utils.hexZeroPad(Poseidon.hash(inputs), 32)
+  return utils.hexZeroPad(Poseidon.hash(inputs), 32)
 }
 
 export function generateSecrets(): SecretPair {
-  const secret = ethers.utils.randomBytes(31)
-  const nullifier = ethers.utils.randomBytes(31)
+  const secret = utils.randomBytes(31)
+  const nullifier = utils.randomBytes(31)
 
   return {
-    secret: padElement(ethers.utils.hexlify(secret)),
-    nullifier: padElement(ethers.utils.hexlify(nullifier)),
+    secret: padElement(utils.hexlify(secret)),
+    nullifier: padElement(utils.hexlify(nullifier)),
   }
 }
 
@@ -50,7 +53,7 @@ export function getCommitment(pair: SecretPair): string {
 }
 
 function padElement(element: BytesLike) {
-  return ethers.utils.hexZeroPad(element, 32)
+  return utils.hexZeroPad(element, 32)
 }
 
 export function getNullifierHash(pair: SecretPair): string {
@@ -132,12 +135,7 @@ export const createRequestOnChain = (
   }
 }
 
-export const createRequest = async (opts: {
-  claimType: ClaimTypes
-  reason: string
-  message: string
-  sender: string
-}) => {
+export const createRequest = async (opts: AppRequestOpts) => {
   // const { data } = await api.get<{
   //   verification_id: string
   //   jwt: string

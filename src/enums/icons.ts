@@ -25,6 +25,7 @@ import InfoIcon from '@mui/icons-material/Info'
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined'
 import Key from '@mui/icons-material/Key'
 import KeyboardArrowDownOutlinedIcon from '@mui/icons-material/KeyboardArrowDownOutlined'
+import Language from '@mui/icons-material/Language'
 import Layers from '@mui/icons-material/Layers'
 import LightModeOutlined from '@mui/icons-material/LightModeOutlined'
 import Link from '@mui/icons-material/Link'
@@ -99,4 +100,5 @@ export const ICON_COMPONENTS = {
   personAddAlt1: PersonAddAlt1,
   download: Download,
   upload: Upload,
+  language: Language,
 }

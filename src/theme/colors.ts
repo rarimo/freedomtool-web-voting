@@ -25,7 +25,7 @@ export const lightPalette: PaletteOptions = {
   },
   success: {
     darker: '#1D9337',
-    dark: '#1D9337',
+    dark: '#27915E',
     main: '#5AD475',
     light: alpha('#5AD4751A', 0.1),
     lighter: alpha('#27915E0D', 0.05),
