@@ -1,0 +1,43 @@
+{
+  "profile-page": {
+    "title" : "Profiles & Wallets",
+    "description": "Manage your identity credentials and Soulbound Tokens (SBTs) easily from this app",
+    "wallet": "Wallet",
+    "filter": "Filter",
+    "empty-title": "Add Credentials",
+    "empty-description": "Explore credentials marketplace with different providers "
+  },
+  "sign-in-page": {
+    "title": "Sign in",
+    "description": "Manage your identity credentials and Soulbound Tokens (SBTs) easily from this app",
+    "connect-btn": "Connect Metamask",
+    "install-btn": "Install Metamask",
+    "reload-page-btn": "Please, reload page"
+  },
+  "validations": {
+    "field-error_required": "Please fill out this field",
+    "field-error_minLength": "This field must contain minimum {{minLength}} symbols",
+    "field-error_maxLength": "This field must contain maximum {{maxLength}} symbols"
+  },
+  "errors": {
+    "default": "Something went wrong"
+  },
+  "notifications": {
+    "default-title-success": "Success",
+    "default-title-error": "Error",
+    "default-title-warning": "Warning",
+    "default-title-info": "Info",
+    "default-title-default": "Just a message",
+    "default-message-success": "Action successful",
+    "default-message-error": "Something went wrong",
+    "default-message-warning": "Something you are doing is not recommended",
+    "default-message-info": "Something is happening. Just want you to know that",
+    "default-message-default": "Just a message"
+  },
+  "voting-details": {
+    "commitment-start-timer": "Registration starts {{startTime}}",
+    "commitment-end-timer": "Registration ends {{endTime}}",
+    "commitment-results-timer": "Registration has ended",
+    "voting-end-timer": "Voting ends {{endTime}}"
+  }
+}
