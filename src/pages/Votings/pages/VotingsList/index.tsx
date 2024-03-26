@@ -1,9 +1,9 @@
-import { Alert, Box, Grid, Paper, Skeleton, Stack } from '@mui/material'
+import { Alert, Paper, Stack } from '@mui/material'
 
 import { NoDataViewer, PageTitles } from '@/common'
 import { useVotingsContext } from '@/pages/Votings/contexts'
 
-import { VotingListCard } from './components'
+import { VotingListCard, VotingListCardSkeleton } from './components'
 
 export default function VotingsList() {
   const { AppVotings, isVotingsLoading, isVotingsLoadingError } = useVotingsContext()
@@ -13,14 +13,14 @@ export default function VotingsList() {
       <PageTitles title={'Active Polls'} />
 
       {isVotingsLoading ? (
-        <Grid container spacing={4}>
-          <Box component={Grid} item xs={6}>
-            <Skeleton height={360} />
-          </Box>
-          <Box component={Grid} item xs={6}>
-            <Skeleton height={360} />
-          </Box>
-        </Grid>
+        <Stack mt={6} spacing={6}>
+          <Paper>
+            <VotingListCardSkeleton />
+          </Paper>
+          <Paper>
+            <VotingListCardSkeleton />
+          </Paper>
+        </Stack>
       ) : isVotingsLoadingError ? (
         <Alert severity='error'>{`There's an error occurred, please, reload page`}</Alert>
       ) : AppVotings.length ? (
