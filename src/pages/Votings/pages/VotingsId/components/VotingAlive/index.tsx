@@ -5,11 +5,9 @@ import { useCallback, useState } from 'react'
 import {
   AppVoting,
   ClaimTypes,
-  getCommitment,
   getVoteZKP,
   poseidonHash,
   ProofRequestResponse,
-  SecretPair,
   vote,
 } from '@/api/modules/verify'
 import { NoDataViewer } from '@/common'
@@ -35,17 +33,18 @@ export default function VotingAlive({ appVoting, ...rest }: Props) {
 
   const { getIsUserRegistered } = useAppVotingDetails(appVoting)
 
-  const { request, start, cancelSubscription } = useAppRequest({
-    claimType: ClaimTypes.AuthClaim,
-    reason: '', // FIXME: use real data
-    message: '', // FIXME: use real data
-    sender: '', // FIXME: use real data
+  const { request, start, cancelSubscription } = useAppRequest<ClaimTypes.Voting>({
+    type: ClaimTypes.Voting,
+    data: {
+      metadata_url: appVoting.registration.remark,
+      // callbackUrl will be auto appended
+    },
   })
 
   const [selectedCandidateHash, setSelectedCandidateHash] = useState<string>('')
 
   const voteForCandidate = useCallback(
-    async (proofResponse: ProofRequestResponse, secrets: SecretPair, candidateHash: string) => {
+    async (proofResponse: ProofRequestResponse[ClaimTypes.Voting], candidateHash: string) => {
       setIsPending(true)
 
       try {
@@ -54,7 +53,9 @@ export default function VotingAlive({ appVoting, ...rest }: Props) {
 
         if (!provider?.rawProvider) throw new TypeError('Provider is not connected')
 
-        if (!(await getIsUserRegistered(proofResponse))) {
+        if (
+          !(await getIsUserRegistered(proofResponse.data.proveIdentityParams.documentNullifier))
+        ) {
           throw new Error('User is not registered') // TODO: add notification
         }
 
@@ -63,9 +64,7 @@ export default function VotingAlive({ appVoting, ...rest }: Props) {
           provider.rawProvider as unknown as providers.JsonRpcProvider,
         )
 
-        const commitment = getCommitment(secrets)
-
-        const commitmentIndex = poseidonHash(commitment)
+        const commitmentIndex = poseidonHash(proofResponse.data.proveIdentityParams.commitment)
 
         const root = await registrationInstance.getRoot()
 
@@ -96,8 +95,8 @@ export default function VotingAlive({ appVoting, ...rest }: Props) {
 
   const handleVote = useCallback(
     async (candidateHash: string) => {
-      await start(async (proofResponse, secrets) => {
-        await voteForCandidate(proofResponse, secrets, candidateHash)
+      await start(async proofResponse => {
+        await voteForCandidate(proofResponse, candidateHash)
 
         setIsAppRequestModalShown(false)
       })

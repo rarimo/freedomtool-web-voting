@@ -1,15 +1,7 @@
-import { Token, ZKProof } from '@iden3/js-jwz'
 import { Alert, Button, Paper, Stack, StackProps, Typography, useTheme } from '@mui/material'
 import { useCallback, useState } from 'react'
 
-import {
-  AppVoting,
-  ClaimTypes,
-  getCommitment,
-  ProofRequestResponse,
-  SecretPair,
-  signUpForVoting,
-} from '@/api/modules/verify'
+import { AppVoting, ClaimTypes, ProofRequestResponse, signUpForVoting } from '@/api/modules/verify'
 import { BusEvents } from '@/enums'
 import { bus, ErrorHandler, sleep } from '@/helpers'
 import { useAppRequest, useAppVotingDetails } from '@/pages/Votings/hooks'
@@ -32,61 +24,61 @@ export default function VotingRegistration({ appVoting, ...rest }: Props) {
 
   const { getIsUserRegistered } = useAppVotingDetails(appVoting)
 
-  const { request, start, cancelSubscription } = useAppRequest({
-    claimType: ClaimTypes.AuthClaim,
-    reason: '', // FIXME: use real data
-    message: '', // FIXME: use real data
-    sender: '', // FIXME: use real data
+  const { request, start, cancelSubscription } = useAppRequest<ClaimTypes.Registration>({
+    type: ClaimTypes.Registration,
+    data: {
+      metadata_url: appVoting.registration.remark,
+      // callbackUrl will be auto appended
+    },
   })
 
   const buildTxAndSignUpForVoting = useCallback(
-    async (proofResponse: ProofRequestResponse, secrets: SecretPair) => {
+    async (proofResponse: ProofRequestResponse[ClaimTypes.Registration]) => {
       setIsPending(true)
 
       try {
-        if (!proofResponse?.jwz) {
-          throw new Error('Invalid proof data')
-        }
-
-        const jwzToken = await Token.parse(proofResponse?.jwz)
-
-        const zkProofPayload = JSON.parse(jwzToken.getPayload())
-
-        const zkpProof = zkProofPayload.body.scope[0] as ZKProof
-
-        if (!proofResponse?.statesMerkleData || !proofResponse?.updateStateDetails || !zkpProof) {
-          throw new Error('Invalid proof data')
-        }
-
         const proveIdentityParams: IBaseVerifier.ProveIdentityParamsStruct = {
           statesMerkleData: {
-            issuerId: proofResponse?.statesMerkleData.issuerId,
-            issuerState: proofResponse?.statesMerkleData.state.hash,
-            createdAtTimestamp: proofResponse?.statesMerkleData.state.createdAtTimestamp,
-            merkleProof: proofResponse?.statesMerkleData.merkleProof,
+            issuerId: proofResponse.data.registerProofParams.statesMerkleData.issuerId,
+            issuerState: proofResponse.data.registerProofParams.statesMerkleData.issuerState,
+            createdAtTimestamp:
+              proofResponse.data.registerProofParams.statesMerkleData.createdAtTimestamp,
+            merkleProof: proofResponse.data.registerProofParams.statesMerkleData.merkleProof,
           },
-          inputs: zkpProof.pub_signals.map?.(el => BigInt(el)),
-          a: [zkpProof?.proof.pi_a[0], zkpProof?.proof.pi_a[1]],
-          b: [
-            [zkpProof?.proof.pi_b[0][1], zkpProof?.proof.pi_b[0][0]],
-            [zkpProof?.proof.pi_b[1][1], zkpProof?.proof.pi_b[1][0]],
+          inputs: proofResponse.data.registerProofParams.inputs.map?.(el => BigInt(el)),
+          a: [
+            proofResponse.data.registerProofParams?.a[0],
+            proofResponse.data.registerProofParams.a[1],
           ],
-          c: [zkpProof?.proof.pi_c[0], zkpProof?.proof.pi_c[1]],
+          b: [
+            [
+              proofResponse.data.registerProofParams.b[0][1],
+              proofResponse.data.registerProofParams.b[0][0],
+            ],
+            [
+              proofResponse.data.registerProofParams.b[1][1],
+              proofResponse.data.registerProofParams.b[1][0],
+            ],
+          ],
+          c: [
+            proofResponse.data.registerProofParams.c[0],
+            proofResponse.data.registerProofParams.c[1],
+          ],
         }
         const registerProofParams: IRegisterVerifier.RegisterProofParamsStruct = {
-          issuingAuthority: '13281866', // FIXME
-          documentNullifier: proofResponse?.documentNullifier,
+          issuingAuthority: proofResponse.data.proveIdentityParams.issuingAuthority,
+          documentNullifier: proofResponse.data.proveIdentityParams.documentNullifier,
           // TODO: handle 2 cases, when user signed before vote starts, and after
-          commitment: getCommitment(secrets),
+          commitment: proofResponse.data.proveIdentityParams.commitment,
         }
         const transitStateParams: IBaseVerifier.TransitStateParamsStruct = {
-          newIdentitiesStatesRoot: proofResponse?.updateStateDetails.stateRootHash,
-          gistData: {
-            root: proofResponse?.updateStateDetails.gistRootDataStruct.root,
-            createdAtTimestamp:
-              proofResponse?.updateStateDetails.gistRootDataStruct.createdAtTimestamp,
-          },
-          proof: proofResponse?.updateStateDetails.proof,
+          // newIdentitiesStatesRoot: proofResponse?.updateStateDetails.stateRootHash,
+          // gistData: {
+          //   root: proofResponse?.updateStateDetails.gistRootDataStruct.root,
+          //   createdAtTimestamp:
+          //     proofResponse?.updateStateDetails.gistRootDataStruct.createdAtTimestamp,
+          // },
+          // proof: proofResponse?.updateStateDetails.proof,
         }
 
         const contractInterface = VotingRegistration__factory.createInterface()
@@ -115,10 +107,12 @@ export default function VotingRegistration({ appVoting, ...rest }: Props) {
   )
 
   const signUp = useCallback(async () => {
-    await start(async (proofResponse, secrets) => {
-      await buildTxAndSignUpForVoting(proofResponse, secrets)
+    await start(async proofResponse => {
+      await buildTxAndSignUpForVoting(proofResponse)
 
-      setIsUserRegistered(await getIsUserRegistered(proofResponse))
+      setIsUserRegistered(
+        await getIsUserRegistered(proofResponse.data.proveIdentityParams.documentNullifier),
+      )
 
       setIsAppRequestModalShown(false)
     })

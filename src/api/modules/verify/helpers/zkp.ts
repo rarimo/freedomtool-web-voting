@@ -1,14 +1,9 @@
+import { config } from '@config'
 import { Poseidon } from '@iden3/js-crypto'
 import { BytesLike, utils } from 'ethers'
 import { groth16 } from 'snarkjs'
-import { v4 as uuidv4 } from 'uuid'
 
-import {
-  AppRequestOpts,
-  CLAIM_TYPES_MAP_ON_CHAIN,
-  ProofRequestResponse,
-} from '@/api/modules/verify'
-import { config } from '@/config'
+import { ClaimTypes, ClaimTypesMapOnChain, ProofRequestResponse } from '@/api/modules/verify'
 import { VerifierHelper } from '@/types/contracts/Voting'
 
 export type SecretPair = {
@@ -112,30 +107,7 @@ function swap(arr: unknown[], i: number, j: number) {
   arr[j] = temp
 }
 
-export const createRequestOnChain = (
-  reason: string,
-  message: string,
-  sender: string,
-  callbackUrl: string,
-) => {
-  const uuid = uuidv4()
-
-  return {
-    id: uuid,
-    thid: uuid,
-    from: sender,
-    typ: 'application/iden3comm-plain-json',
-    type: 'https://iden3-communication.io/authorization/1.0/request',
-    body: {
-      reason: reason,
-      message: message,
-      callbackUrl: callbackUrl,
-      scope: [],
-    },
-  }
-}
-
-export const createRequest = async (opts: AppRequestOpts) => {
+export const buildAppRequest = async <T extends ClaimTypes>(opts: ClaimTypesMapOnChain[T]) => {
   // const { data } = await api.get<{
   //   verification_id: string
   //   jwt: string
@@ -146,31 +118,20 @@ export const createRequest = async (opts: AppRequestOpts) => {
     jwt: 'qwerty',
   }
 
-  const request = createRequestOnChain(
-    opts.reason,
-    opts.message,
-    opts.sender,
-    `${config.API_URL}/integrations/verify-proxy/v1/public/verify/callback/${data.verification_id}`,
-  )
-
   return {
+    verificationId: data.verification_id,
     request: {
-      ...request,
-      id: data.verification_id,
-      thid: data.verification_id,
-      body: {
-        ...request.body,
-        scope: [CLAIM_TYPES_MAP_ON_CHAIN[opts.claimType]],
-      },
+      ...opts,
+      callbackUrl: `${config.API_URL}/integrations/verify-proxy/v1/public/verify/callback/${data.verification_id}`,
     },
     jwtToken: data.jwt,
   }
 }
 
-export const getRequestResponse = (
+export const subscribeToAppRequestResponse = <T extends ClaimTypes>(
   verificationId: string,
   jwtToken: string,
-  callback: (res: ProofRequestResponse) => void,
+  callback: (res: ProofRequestResponse[T]) => void,
 ): (() => void) => {
   // Create WebSocket connection.
   // const socket = new WebSocket(
@@ -199,31 +160,46 @@ export const getRequestResponse = (
   //
   // return socket.close
 
+  // TODO: get data from callback url and parse jwz token
+  // if (!proofResponse?.jwz) {
+  //   throw new Error('Invalid proof data')
+  // }
+  //
+  // const jwzToken = await Token.parse(proofResponse?.jwz)
+  //
+  // const zkProofPayload = JSON.parse(jwzToken.getPayload())
+  //
+  // const zkpProof = zkProofPayload.body.scope[0] as ZKProof
+
+  const mockedData: ProofRequestResponse[ClaimTypes.Registration] = {
+    type: ClaimTypes.Registration,
+    data: {
+      proveIdentityParams: {
+        issuingAuthority: '123',
+        documentNullifier: '123',
+        commitment: '0x123',
+      },
+      registerProofParams: {
+        a: ['123', '123'],
+        b: [
+          ['123', '123'],
+          ['123', '123'],
+        ],
+        c: ['123', '123'],
+        inputs: ['123', '123', '123'],
+        statesMerkleData: {
+          merkleProof: ['0x123'],
+          createdAtTimestamp: '123',
+          issuerState: '123',
+          issuerId: '123',
+        },
+      },
+    },
+  }
+
   // TODO: remove mocked data
   setTimeout(() => {
-    callback({
-      // eslint-disable-next-line max-len
-      jwz: `eyJhbGciOiJncm90aDE2IiwiY2lyY3VpdElkIjoiYXV0aFYyIiwiY3JpdCI6WyJjaXJjdWl0SWQiXSwidHlwIjoiSldaIn0.bXltZXNzYWdl.eyJwcm9vZiI6eyJwaV9hIjpbIjU4OTA4MTc2NDc0NDY4MzQ2MDU3NjU3NzA0NTExMDIyMDg4NjMyMDkxNDgwMTE5NDgzNjA0MDQ3NDU0ODA2NzE1NDM2MjU5MTkwNDIiLCI2OTY1MzI0OTI3MDYzMDQxOTU2NTIwODg5ODU1MDcxNjU1OTg5Mzg4NzQyODM1ODgzOTI1NjU4MDI1NDE0MjM4OTQ2OTkxNjE1ODMwIiwiMSJdLCJwaV9iIjpbWyIxNjgwMjkyNTc5OTM3NjI4MDExOTc1MTk2MTk1MDEzNjQ5NjkyMjMyOTU1NDI5Mjc0Nzc5OTE1NDI2MDQwMzMwNTM0Njc1NDU1Mzk5NCIsIjIwNzkzNDcyNDAwMzczNDkzMjIyNzAyNDY4NDcxMjQzNzcwMzk3NzY1MzY0OTc3NDA0NDQwNTQ2Mzc0MTkxNjU2OTM0NDE3Mjg1MDQxIl0sWyI2MTI1MjcxNjYyOTI4NDUzMjQ5NDgyMjc5MjQ2ODA2NTIxNTE2MzU5NDQwMTcxMDM1MzgxMzU4OTI3MjI4Njc2NTQxNTc0NTg5MDkxIiwiNTY4MDc3OTcxNTc0MjMyMjI0ODQyOTM0NDc1ODA5NDk0MzMyMzE1OTIzOTQzNjkyNzI3MjM3NDEwOTkxMzYzOTAyMjM2NDMyMjYwNiJdLFsiMSIsIjAiXV0sInBpX2MiOlsiOTQ4MTkzNTE5MTMwNTA0OTM5MTA3MjkxMDkxNzE2ODQzNzA0OTI4MjQyMzc3NDQ5MDM4NzMwNDU3NzM3MTI4Mjc0Mjc1NTc3ODYwOCIsIjEyMDMxNDE1NjE1ODExNTEzNzc2OTcwMDYwOTgzMDk2NTMxNzcwMTcwNDAxMjkzODEwMTQwMDY2ODM1NzkyMjk4NTcwNDQxMzcyMTg3IiwiMSJdLCJwcm90b2NvbCI6Imdyb3RoMTYiLCJjdXJ2ZSI6ImJuMTI4In0sInB1Yl9zaWduYWxzIjpbIjIzMTQ4OTM2NDY2MzM0MzUwNzQ0NTQ4NzkwMDEyMjk0NDg5MzY1MjA3NDQwNzU0NTA5OTg4OTg2Njg0Nzk3NzA4MzcwMDUxMDczIiwiNjExMDUxNzc2ODI0OTU1OTIzODE5MzQ3NzQzNTQ1NDc5MjAyNDczMjE3Mzg2NTQ4ODkwMDI3MDg0OTYyNDMyODY1MDc2NTY5MTQ5NCIsIjEyNDM5MDQ3MTE0Mjk5NjE4NTg3NzQyMjA2NDc2MTA3MjQyNzM3OTg5MTg0NTc5OTE0ODYwMzE1NjcyNDQxMDA3NjcyNTkyMzk3NDciXX0`,
-      statesMerkleData: {
-        issuerId: 'mockedIssuerId',
-        state: {
-          hash: '',
-          createdAtTimestamp: '1234123',
-          index: '',
-          lastUpdateOperationIndex: '',
-        },
-        merkleProof: [],
-      },
-      updateStateDetails: {
-        stateRootHash: '',
-        gistRootDataStruct: {
-          root: '',
-          createdAtTimestamp: '',
-        },
-        proof: '',
-      },
-      documentNullifier: '',
-    })
+    callback(mockedData as ProofRequestResponse[T])
   }, 5_000)
 
   return () => {}

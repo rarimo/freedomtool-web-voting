@@ -1,31 +1,65 @@
-import { ClaimTypes } from '@/api/modules/verify'
+import { ClaimTypes } from '@/api/modules/verify/enums'
 
 export type ProofRequestResponse = {
-  updateStateDetails: {
-    stateRootHash: string
-    gistRootDataStruct: {
-      root: string | number
-      createdAtTimestamp: string | number
+  [ClaimTypes.Registration]: {
+    type: ClaimTypes.Registration
+    data: {
+      proveIdentityParams: {
+        issuingAuthority: string
+        documentNullifier: string
+        commitment: string
+      }
+      registerProofParams: {
+        a: string[]
+        b: [[string, string], [string, string]]
+        c: [string, string]
+        inputs: string[]
+        statesMerkleData: {
+          merkleProof: string[]
+          createdAtTimestamp: string
+          issuerState: string
+          issuerId: string
+        }
+      }
     }
-    proof: string
   }
-  jwz: string
-  documentNullifier: string
-  statesMerkleData?: {
-    issuerId: string
-    state: {
-      index: string
-      hash: string
-      createdAtTimestamp: string
-      lastUpdateOperationIndex: string
+  [ClaimTypes.Voting]: {
+    type: ClaimTypes.Voting
+    data: {
+      proveIdentityParams: {
+        issuingAuthority: string
+        documentNullifier: string
+        commitment: string
+      }
+      registerProofParams: {
+        a: string[]
+        b: [[string, string], [string, string]]
+        c: [string, string]
+        inputs: string[]
+        statesMerkleData: {
+          merkleProof: string
+          createdAtTimestamp: string
+          issuerState: string
+          issuerId: string
+        }
+      }
     }
-    merkleProof: string[]
   }
 }
 
-export type AppRequestOpts = {
-  claimType: ClaimTypes
-  reason: string
-  message: string
-  sender: string
+export type ClaimTypesMapOnChain = {
+  [ClaimTypes.Registration]: {
+    type: ClaimTypes.Registration
+    data: {
+      metadata_url: string
+      // callback: string
+    }
+  }
+  [ClaimTypes.Voting]: {
+    type: ClaimTypes.Voting
+    data: {
+      metadata_url: string
+      // callback: string
+    }
+  }
 }

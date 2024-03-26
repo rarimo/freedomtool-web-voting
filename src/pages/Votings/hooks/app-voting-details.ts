@@ -99,12 +99,10 @@ export const useAppVotingDetails = (pairIdOrInstance: string | AppVoting) => {
   ])
 
   const getIsUserRegistered = useCallback(
-    async (proofResponse: ProofRequestResponse) => {
+    async (documentNullifier: string) => {
       if (!provider?.rawProvider) throw new TypeError('Provider is not connected')
 
       if (!appVoting) throw new TypeError('Voting is not found')
-
-      if (!proofResponse?.documentNullifier) return false
 
       const registrationInstance = VotingRegistration__factory.connect(
         appVoting.registration.contract_address,
@@ -118,7 +116,7 @@ export const useAppVotingDetails = (pairIdOrInstance: string | AppVoting) => {
         provider.rawProvider as unknown as providers.JsonRpcProvider,
       )
 
-      return registerVerifierInstance.isIdentityRegistered(proofResponse.documentNullifier)
+      return registerVerifierInstance.isIdentityRegistered(documentNullifier)
     },
     [appVoting, provider?.rawProvider],
   )

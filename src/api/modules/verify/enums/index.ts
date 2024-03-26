@@ -1,5 +1,6 @@
 export enum ClaimTypes {
-  AuthClaim = 'AuthClaim',
+  Registration = 'registration',
+  Voting = 'voting',
 }
 
 export enum VotingTypes {

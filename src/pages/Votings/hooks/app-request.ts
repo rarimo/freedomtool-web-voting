@@ -1,46 +1,33 @@
 import { useCallback, useState } from 'react'
 
 import {
-  AppRequestOpts,
-  createRequest,
-  generateSecrets,
-  getCommitment,
-  getRequestResponse,
+  buildAppRequest,
+  ClaimTypes,
+  ClaimTypesMapOnChain,
   ProofRequestResponse,
-  SecretPair,
+  subscribeToAppRequestResponse,
 } from '@/api/modules/verify'
 
-export const useAppRequest = (
-  reqOpts: AppRequestOpts,
+export const useAppRequest = <T extends ClaimTypes>(
+  reqOpts: ClaimTypesMapOnChain[T],
 ): {
   request: string
   cancelSubscription: () => void
 
-  start: (
-    onSuccess: (proofResponse: ProofRequestResponse, secrets: SecretPair) => Promise<void>,
-  ) => Promise<void>
+  start: (onSuccess: (response: ProofRequestResponse[T]) => Promise<void>) => Promise<void>
 } => {
   const [request, setRequest] = useState('')
   const [cancelSubscription, setCancelSubscription] = useState<() => void>(() => {})
 
   const start = useCallback(
-    async (
-      onSuccess: (proofResponse: ProofRequestResponse, secrets: SecretPair) => Promise<void>,
-    ) => {
-      // TODO: get secrets from app?
-      const secrets = generateSecrets()
+    async (onSuccess: (response: ProofRequestResponse[T]) => Promise<void>) => {
+      const { request, verificationId, jwtToken } = await buildAppRequest(reqOpts)
 
-      // TODO: ?
-      const commitment = getCommitment(secrets)
-
-      // TODO: upd params
-      const { request, jwtToken } = await createRequest(reqOpts)
-
-      const cancelSubscription = getRequestResponse(
-        request.id,
+      const cancelSubscription = subscribeToAppRequestResponse(
+        verificationId,
         jwtToken,
-        (res: ProofRequestResponse) => {
-          onSuccess(res, secrets)
+        response => {
+          onSuccess(response as ProofRequestResponse[T])
         },
       )
 
