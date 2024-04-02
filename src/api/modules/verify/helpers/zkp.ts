@@ -1,8 +1,10 @@
 import { config } from '@config'
 import { Poseidon } from '@iden3/js-crypto'
+import { Token } from '@iden3/js-jwz'
 import { BytesLike, utils } from 'ethers'
 import { groth16 } from 'snarkjs'
 
+import { api } from '@/api/clients'
 import { ClaimTypes, ClaimTypesMapOnChain, ProofRequestResponse } from '@/api/modules/verify'
 import { VerifierHelper } from '@/types/contracts/Voting'
 
@@ -108,99 +110,61 @@ function swap(arr: unknown[], i: number, j: number) {
 }
 
 export const buildAppRequest = async <T extends ClaimTypes>(opts: ClaimTypesMapOnChain[T]) => {
-  // const { data } = await api.get<{
-  //   verification_id: string
-  //   jwt: string
-  // }>('/integrations/verify-proxy/v1/public/verify/request')
-
-  const data = {
-    verification_id: 'qwert-qwert-qwert-qwert',
-    jwt: 'qwerty',
-  }
+  const { data } = await api.get<{
+    verification_id: string
+    jwt: string
+  }>('/integrations/verify-proxy/v1/public/verify/request')
 
   return {
     verificationId: data.verification_id,
+    jwtToken: data.jwt,
     request: {
       ...opts,
-      callbackUrl: `${config.API_URL}/integrations/verify-proxy/v1/public/verify/callback/${data.verification_id}`,
+      data: {
+        ...opts.data,
+        callback: `${config.API_URL}/integrations/verify-proxy/v1/public/verify/callback/${data.verification_id}`,
+      },
     },
-    jwtToken: data.jwt,
   }
 }
 
 export const subscribeToAppRequestResponse = <T extends ClaimTypes>(
   verificationId: string,
   jwtToken: string,
-  callback: (res: ProofRequestResponse[T]) => void,
+  callback: (res: ProofRequestResponse[T], cancelCb: () => void) => void,
 ): (() => void) => {
-  // Create WebSocket connection.
-  // const socket = new WebSocket(
-  //   `ws://${config.API_URL}/integrations/verify-proxy/v1/public/verify/response/${verificationId}`,
-  // )
-  //
-  // // Connection opened
-  // socket.addEventListener('open', event => {
-  //   console.log('WebSocket connection opened', event)
-  //
-  //   socket.send(
-  //     JSON.stringify({
-  //       Authorization: `Bearer ${jwtToken}`,
-  //     }),
-  //   )
-  // })
-  //
-  // // Listen for messages
-  // socket.addEventListener('message', event => {
-  //   console.log('Message from server ', event)
-  //
-  //   if (!event.data) return
-  //
-  //   callback(event.data)
-  // })
-  //
-  // return socket.close
+  // let tries = 0
 
-  // TODO: get data from callback url and parse jwz token
-  // if (!proofResponse?.jwz) {
-  //   throw new Error('Invalid proof data')
-  // }
-  //
-  // const jwzToken = await Token.parse(proofResponse?.jwz)
-  //
-  // const zkProofPayload = JSON.parse(jwzToken.getPayload())
-  //
-  // const zkpProof = zkProofPayload.body.scope[0] as ZKProof
-
-  const mockedData: ProofRequestResponse[ClaimTypes.Registration] = {
-    type: ClaimTypes.Registration,
-    data: {
-      proveIdentityParams: {
-        issuingAuthority: '123',
-        documentNullifier: '123',
-        commitment: '0x123',
-      },
-      registerProofParams: {
-        a: ['123', '123'],
-        b: [
-          ['123', '123'],
-          ['123', '123'],
-        ],
-        c: ['123', '123'],
-        inputs: ['123', '123', '123'],
-        statesMerkleData: {
-          merkleProof: ['0x123'],
-          createdAtTimestamp: '123',
-          issuerState: '123',
-          issuerId: '123',
+  const intervalId = setInterval(async () => {
+    try {
+      const response = await api.get<{
+        jwz: string
+      }>(`/integrations/verify-proxy/v1/public/verify/response/${verificationId}`, {
+        headers: {
+          Authorization: `Bearer ${jwtToken}`,
         },
-      },
-    },
+      })
+
+      if (!response.data.jwz) {
+        throw new TypeError('Invalid response')
+      }
+
+      const jwzToken = await Token.parse(response.data.jwz)
+
+      const payload = JSON.parse(jwzToken.getPayload())
+
+      callback(payload, () => clearInterval(intervalId))
+    } catch (error) {
+      // if (get(error, 'code') === HTTP_STATUS_CODES.NOT_FOUND) {
+      //
+      //
+      //   continue
+      // }
+      // throw error
+    }
+  }, 3_000)
+
+  return () => {
+    clearInterval(intervalId)
   }
-
-  // TODO: remove mocked data
-  setTimeout(() => {
-    callback(mockedData as ProofRequestResponse[T])
-  }, 5_000)
-
-  return () => {}
 }

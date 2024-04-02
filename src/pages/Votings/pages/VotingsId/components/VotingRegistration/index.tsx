@@ -8,7 +8,7 @@ import { useAppRequest, useAppVotingDetails } from '@/pages/Votings/hooks'
 import { AppRequestModal } from '@/pages/Votings/pages/VotingsId/components'
 import { VotingProcessModal } from '@/pages/Votings/pages/VotingsId/components/VotingAlive/components'
 import { VotingRegistration__factory } from '@/types'
-import { IBaseVerifier, IRegisterVerifier } from '@/types/contracts/VotingRegistration'
+import { IBaseVerifier, IRegisterVerifier } from '@/types/contracts/RegisterVerifier'
 import { UiIcon } from '@/ui'
 
 type Props = StackProps & {
@@ -34,8 +34,6 @@ export default function VotingRegistration({ appVoting, ...rest }: Props) {
 
   const buildTxAndSignUpForVoting = useCallback(
     async (proofResponse: ProofRequestResponse[ClaimTypes.Registration]) => {
-      setIsPending(true)
-
       try {
         const proveIdentityParams: IBaseVerifier.ProveIdentityParamsStruct = {
           statesMerkleData: {
@@ -72,13 +70,12 @@ export default function VotingRegistration({ appVoting, ...rest }: Props) {
           commitment: proofResponse.data.proveIdentityParams.commitment,
         }
         const transitStateParams: IBaseVerifier.TransitStateParamsStruct = {
-          // newIdentitiesStatesRoot: proofResponse?.updateStateDetails.stateRootHash,
-          // gistData: {
-          //   root: proofResponse?.updateStateDetails.gistRootDataStruct.root,
-          //   createdAtTimestamp:
-          //     proofResponse?.updateStateDetails.gistRootDataStruct.createdAtTimestamp,
-          // },
-          // proof: proofResponse?.updateStateDetails.proof,
+          newIdentitiesStatesRoot: '',
+          gistData: {
+            root: 0,
+            createdAtTimestamp: 0,
+          },
+          proof: '',
         }
 
         const contractInterface = VotingRegistration__factory.createInterface()
@@ -87,7 +84,7 @@ export default function VotingRegistration({ appVoting, ...rest }: Props) {
           proveIdentityParams,
           registerProofParams,
           transitStateParams,
-          true,
+          false,
         ])
 
         await signUpForVoting(appVoting.registration.contract_address, callData)
@@ -100,25 +97,34 @@ export default function VotingRegistration({ appVoting, ...rest }: Props) {
       }
 
       await sleep(10_000)
-
-      setIsPending(false)
     },
-    [appVoting],
+    [appVoting.registration.contract_address],
   )
 
-  const signUp = useCallback(async () => {
-    await start(async proofResponse => {
+  const successHandler = useCallback(
+    async (proofResponse: ProofRequestResponse[ClaimTypes.Registration], cancelCb: () => void) => {
+      setIsPending(true)
+
+      setIsAppRequestModalShown(false)
+
+      cancelCb?.()
+
       await buildTxAndSignUpForVoting(proofResponse)
 
       setIsUserRegistered(
         await getIsUserRegistered(proofResponse.data.proveIdentityParams.documentNullifier),
       )
 
-      setIsAppRequestModalShown(false)
-    })
+      setIsPending(false)
+    },
+    [buildTxAndSignUpForVoting, getIsUserRegistered],
+  )
+
+  const signUp = useCallback(async () => {
+    await start(successHandler)
 
     setIsAppRequestModalShown(true)
-  }, [buildTxAndSignUpForVoting, getIsUserRegistered, start])
+  }, [start, successHandler])
 
   return (
     <Stack {...rest}>
@@ -177,7 +183,10 @@ export default function VotingRegistration({ appVoting, ...rest }: Props) {
       <AppRequestModal
         isShown={isAppRequestModalShown}
         request={request}
-        cancel={cancelSubscription}
+        cancel={() => {
+          setIsAppRequestModalShown(false)
+          cancelSubscription?.()
+        }}
       />
 
       <VotingProcessModal open={isPending} />

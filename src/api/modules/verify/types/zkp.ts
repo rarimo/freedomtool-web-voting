@@ -37,7 +37,7 @@ export type ProofRequestResponse = {
         c: [string, string]
         inputs: string[]
         statesMerkleData: {
-          merkleProof: string
+          merkleProof: string[]
           createdAtTimestamp: string
           issuerState: string
           issuerId: string

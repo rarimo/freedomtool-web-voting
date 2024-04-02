@@ -3,7 +3,7 @@ import { providers } from 'ethers'
 import { useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { AppVoting, ProofRequestResponse } from '@/api/modules/verify'
+import { AppVoting } from '@/api/modules/verify'
 import { useWeb3Context } from '@/contexts'
 import { formatDateDiff } from '@/helpers'
 import { useVotingsContext } from '@/pages/Votings/contexts'

@@ -14,7 +14,7 @@ export default function AppRequestModal({ isShown, request, cancel }: Props) {
   const { palette, spacing } = useTheme()
 
   return (
-    <UiModal open={!!(request && isShown)}>
+    <UiModal open={!!(request && isShown)} onClose={() => cancel?.()}>
       <Stack justifyContent='center' alignItems='center' width='100%' height='100%'>
         <Paper
           sx={{
@@ -27,7 +27,7 @@ export default function AppRequestModal({ isShown, request, cancel }: Props) {
           <Stack direction='row' justifyContent='space-between' p={5}>
             <Typography variant='h6'>Authorize with Freedomtool App</Typography>
 
-            <UiIconButton onClick={cancel}>
+            <UiIconButton onClick={() => cancel?.()}>
               <UiIcon componentName='close' />
             </UiIconButton>
           </Stack>

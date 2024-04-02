@@ -14,24 +14,32 @@ export const useAppRequest = <T extends ClaimTypes>(
   request: string
   cancelSubscription: () => void
 
-  start: (onSuccess: (response: ProofRequestResponse[T]) => Promise<void>) => Promise<void>
+  start: (
+    onSuccess: (response: ProofRequestResponse[T], cancelCb: () => void) => Promise<void>,
+  ) => Promise<void>
 } => {
   const [request, setRequest] = useState('')
   const [cancelSubscription, setCancelSubscription] = useState<() => void>(() => {})
 
   const start = useCallback(
-    async (onSuccess: (response: ProofRequestResponse[T]) => Promise<void>) => {
+    async (
+      onSuccess: (response: ProofRequestResponse[T], cancelCb: () => void) => Promise<void>,
+    ) => {
       const { request, verificationId, jwtToken } = await buildAppRequest(reqOpts)
 
       const cancelSubscription = subscribeToAppRequestResponse(
         verificationId,
         jwtToken,
-        response => {
-          onSuccess(response as ProofRequestResponse[T])
+        (response, cancelCb) => {
+          onSuccess(response as ProofRequestResponse[T], cancelCb)
         },
       )
 
-      setCancelSubscription(cancelSubscription)
+      setCancelSubscription(() => {
+        return () => {
+          cancelSubscription()
+        }
+      })
 
       const requestString = JSON.stringify(request)
 
