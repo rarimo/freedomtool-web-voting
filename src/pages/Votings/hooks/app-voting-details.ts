@@ -7,7 +7,7 @@ import { AppVoting } from '@/api/modules/verify'
 import { useWeb3Context } from '@/contexts'
 import { formatDateDiff } from '@/helpers'
 import { useVotingsContext } from '@/pages/Votings/contexts'
-import { RegisterVerifier__factory, VotingRegistration__factory } from '@/types'
+import { VotingRegistration__factory } from '@/types'
 
 export const useAppVotingDetails = (pairIdOrInstance: string | AppVoting) => {
   const { appVotings } = useVotingsContext()
@@ -109,14 +109,7 @@ export const useAppVotingDetails = (pairIdOrInstance: string | AppVoting) => {
         provider.rawProvider as unknown as providers.JsonRpcProvider,
       )
 
-      const registerVerifierContractAddress = await registrationInstance.registerVerifier()
-
-      const registerVerifierInstance = RegisterVerifier__factory.connect(
-        registerVerifierContractAddress,
-        provider.rawProvider as unknown as providers.JsonRpcProvider,
-      )
-
-      return registerVerifierInstance.isIdentityRegistered(documentNullifier)
+      return registrationInstance.isUserRegistered(documentNullifier)
     },
     [appVoting, provider?.rawProvider],
   )

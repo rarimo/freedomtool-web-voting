@@ -7,8 +7,6 @@ import { bus, ErrorHandler, sleep } from '@/helpers'
 import { useAppRequest, useAppVotingDetails } from '@/pages/Votings/hooks'
 import { AppRequestModal } from '@/pages/Votings/pages/VotingsId/components'
 import { VotingProcessModal } from '@/pages/Votings/pages/VotingsId/components/VotingAlive/components'
-import { VotingRegistration__factory } from '@/types'
-import { IBaseVerifier, IRegisterVerifier } from '@/types/contracts/RegisterVerifier'
 import { UiIcon } from '@/ui'
 
 type Props = StackProps & {
@@ -35,59 +33,15 @@ export default function VotingRegistration({ appVoting, ...rest }: Props) {
   const buildTxAndSignUpForVoting = useCallback(
     async (proofResponse: ProofRequestResponse[ClaimTypes.Registration]) => {
       try {
-        const proveIdentityParams: IBaseVerifier.ProveIdentityParamsStruct = {
-          statesMerkleData: {
-            issuerId: proofResponse.data.registerProofParams.statesMerkleData.issuerId,
-            issuerState: proofResponse.data.registerProofParams.statesMerkleData.issuerState,
-            createdAtTimestamp:
-              proofResponse.data.registerProofParams.statesMerkleData.createdAtTimestamp,
-            merkleProof: proofResponse.data.registerProofParams.statesMerkleData.merkleProof,
-          },
-          inputs: proofResponse.data.registerProofParams.inputs.map?.(el => BigInt(el)),
-          a: [
-            proofResponse.data.registerProofParams?.a[0],
-            proofResponse.data.registerProofParams.a[1],
-          ],
-          b: [
-            [
-              proofResponse.data.registerProofParams.b[0][1],
-              proofResponse.data.registerProofParams.b[0][0],
-            ],
-            [
-              proofResponse.data.registerProofParams.b[1][1],
-              proofResponse.data.registerProofParams.b[1][0],
-            ],
-          ],
-          c: [
-            proofResponse.data.registerProofParams.c[0],
-            proofResponse.data.registerProofParams.c[1],
-          ],
-        }
-        const registerProofParams: IRegisterVerifier.RegisterProofParamsStruct = {
-          issuingAuthority: proofResponse.data.proveIdentityParams.issuingAuthority,
-          documentNullifier: proofResponse.data.proveIdentityParams.documentNullifier,
-          // TODO: handle 2 cases, when user signed before vote starts, and after
-          commitment: proofResponse.data.proveIdentityParams.commitment,
-        }
-        const transitStateParams: IBaseVerifier.TransitStateParamsStruct = {
-          newIdentitiesStatesRoot: '',
-          gistData: {
-            root: 0,
-            createdAtTimestamp: 0,
-          },
-          proof: '',
+        const isUserReg = await getIsUserRegistered(proofResponse.document_nullifier)
+
+        if (isUserReg) {
+          setIsUserRegistered(true)
+
+          return
         }
 
-        const contractInterface = VotingRegistration__factory.createInterface()
-
-        const callData = contractInterface.encodeFunctionData('register', [
-          proveIdentityParams,
-          registerProofParams,
-          transitStateParams,
-          false,
-        ])
-
-        await signUpForVoting(appVoting.registration.contract_address, callData)
+        await signUpForVoting(proofResponse.calldata)
 
         bus.emit(BusEvents.success, {
           message: 'You have successfully signed up for voting',
@@ -98,7 +52,7 @@ export default function VotingRegistration({ appVoting, ...rest }: Props) {
 
       await sleep(10_000)
     },
-    [appVoting.registration.contract_address],
+    [getIsUserRegistered],
   )
 
   const successHandler = useCallback(
@@ -111,9 +65,7 @@ export default function VotingRegistration({ appVoting, ...rest }: Props) {
 
       await buildTxAndSignUpForVoting(proofResponse)
 
-      setIsUserRegistered(
-        await getIsUserRegistered(proofResponse.data.proveIdentityParams.documentNullifier),
-      )
+      setIsUserRegistered(await getIsUserRegistered(proofResponse.document_nullifier))
 
       setIsPending(false)
     },

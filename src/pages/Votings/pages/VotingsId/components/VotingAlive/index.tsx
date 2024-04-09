@@ -1,23 +1,16 @@
 import { alpha, Button, Paper, Stack, StackProps, Typography, useTheme } from '@mui/material'
-import { providers } from 'ethers'
 import { useCallback, useState } from 'react'
 
-import {
-  AppVoting,
-  ClaimTypes,
-  getVoteZKP,
-  poseidonHash,
-  ProofRequestResponse,
-  vote,
-} from '@/api/modules/verify'
+import { AppVoting, ClaimTypes, ProofRequestResponse, vote } from '@/api/modules/verify'
 import { NoDataViewer } from '@/common'
 import { useWeb3Context } from '@/contexts'
-import { ErrorHandler, formatDateDMY } from '@/helpers'
+import { BusEvents } from '@/enums'
+import { bus, ErrorHandler, formatDateDMY } from '@/helpers'
 import { useAppRequest, useAppVotingDetails } from '@/pages/Votings/hooks'
 import { AppRequestModal } from '@/pages/Votings/pages/VotingsId/components'
-import { VotingProcessModal } from '@/pages/Votings/pages/VotingsId/components/VotingAlive/components'
-import { VotingRegistration__factory } from '@/types'
 import { UiTooltip } from '@/ui'
+
+import { VotingProcessModal } from './components'
 
 type Props = StackProps & {
   appVoting: AppVoting
@@ -33,18 +26,21 @@ export default function VotingAlive({ appVoting, ...rest }: Props) {
 
   const { getIsUserRegistered } = useAppVotingDetails(appVoting)
 
+  const [selectedCandidateHash, setSelectedCandidateHash] = useState<string>('')
+
   const { request, start, cancelSubscription } = useAppRequest<ClaimTypes.Voting>({
     type: ClaimTypes.Voting,
     data: {
+      registration_address: appVoting.registration.contract_address,
+      voting_address: appVoting.voting!.contract_address,
+      choice: selectedCandidateHash,
       metadata_url: appVoting.registration.remark,
       // callbackUrl will be auto appended
     },
   })
 
-  const [selectedCandidateHash, setSelectedCandidateHash] = useState<string>('')
-
   const voteForCandidate = useCallback(
-    async (proofResponse: ProofRequestResponse[ClaimTypes.Voting], candidateHash: string) => {
+    async (proofResponse: ProofRequestResponse[ClaimTypes.Voting]) => {
       setIsPending(true)
 
       try {
@@ -53,32 +49,14 @@ export default function VotingAlive({ appVoting, ...rest }: Props) {
 
         if (!provider?.rawProvider) throw new TypeError('Provider is not connected')
 
-        if (
-          !(await getIsUserRegistered(proofResponse.data.proveIdentityParams.documentNullifier))
-        ) {
+        if (!(await getIsUserRegistered(proofResponse.document_nullifier))) {
+          bus.emit(BusEvents.error, {
+            message: 'You are not not registered',
+          })
           throw new Error('User is not registered') // TODO: add notification
         }
 
-        const registrationInstance = VotingRegistration__factory.connect(
-          appVoting.registration?.contract_address,
-          provider.rawProvider as unknown as providers.JsonRpcProvider,
-        )
-
-        const commitmentIndex = poseidonHash(proofResponse.data.proveIdentityParams.commitment)
-
-        const root = await registrationInstance.getRoot()
-
-        const onchainProof = await registrationInstance.getProof(commitmentIndex)
-
-        const zkpProof = await getVoteZKP(
-          secrets,
-          root,
-          candidateHash,
-          appVoting.voting.contract_address,
-          onchainProof.siblings,
-        )
-
-        await vote(zkpProof.formattedProof, zkpProof.publicSignals, candidateHash)
+        await vote(appVoting.registration.contract_address, proofResponse.calldata)
       } catch (error) {
         ErrorHandler.process(error)
       }
@@ -93,18 +71,15 @@ export default function VotingAlive({ appVoting, ...rest }: Props) {
     ],
   )
 
-  const handleVote = useCallback(
-    async (candidateHash: string) => {
-      await start(async proofResponse => {
-        await voteForCandidate(proofResponse, candidateHash)
+  const handleVote = useCallback(async () => {
+    await start(async proofResponse => {
+      await voteForCandidate(proofResponse)
 
-        setIsAppRequestModalShown(false)
-      })
+      setIsAppRequestModalShown(false)
+    })
 
-      setIsAppRequestModalShown(true)
-    },
-    [start, voteForCandidate],
-  )
+    setIsAppRequestModalShown(true)
+  }, [start, voteForCandidate])
 
   const isCandidateSelected = useCallback(
     (hash: string) => selectedCandidateHash === hash,
@@ -187,7 +162,7 @@ export default function VotingAlive({ appVoting, ...rest }: Props) {
           {appVoting?.voting?.candidates && (
             <Button
               sx={{ minWidth: spacing(40), alignSelf: 'flex-start' }}
-              onClick={() => handleVote(selectedCandidateHash)}
+              onClick={handleVote}
               disabled={isPending || !selectedCandidateHash}
             >
               CONFIRM

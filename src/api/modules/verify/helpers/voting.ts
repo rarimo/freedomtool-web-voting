@@ -1,32 +1,24 @@
-import type { PublicSignals } from 'snarkjs'
-
 import { api } from '@/api/clients'
 import { RegistrationRemarkDetails, VotingRemarkDetails } from '@/api/modules/verify'
-import { IVoting, VerifierHelper } from '@/types/contracts/Voting'
+import { IVoting } from '@/types/contracts/Voting'
 import { IRegistration } from '@/types/contracts/VotingRegistration'
 
-export const signUpForVoting = async (votingAddress: string, callData: string) => {
-  return api.post('/verify-proof', {
+export const signUpForVoting = async (txData: string) => {
+  return api.post('/integrations/proof-verification-relayer/v1/register', {
     body: {
       data: {
-        votingAddress,
-        callData,
+        tx_data: txData,
       },
     },
   })
 }
 
-export const vote = async (
-  proof: VerifierHelper.ProofPointsStruct,
-  publicSignals: PublicSignals,
-  nullifierHash: string,
-) => {
-  return api.post('/vote', {
+export const vote = async (registrationAddress: string, txData: string) => {
+  return api.post('/integrations/proof-verification-relayer/v1/vote', {
     body: {
       data: {
-        ...proof,
-        publicSignals,
-        nullifierHash,
+        registration: registrationAddress,
+        tx_data: txData,
       },
     },
   })

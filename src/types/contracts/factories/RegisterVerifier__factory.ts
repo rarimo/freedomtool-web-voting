@@ -155,10 +155,46 @@ const _abi = [
         name: "zkpQueriesStorage_",
         type: "address",
       },
+      {
+        internalType: "uint256[]",
+        name: "issuingAuthorityWhitelist_",
+        type: "uint256[]",
+      },
+      {
+        internalType: "uint256[]",
+        name: "issuingAuthorityBlacklist_",
+        type: "uint256[]",
+      },
     ],
     name: "__RegisterVerifier_init",
     outputs: [],
     stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "countIssuingAuthorityBlacklist",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "countIssuingAuthorityWhitelist",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
     type: "function",
   },
   {
@@ -182,6 +218,11 @@ const _abi = [
   },
   {
     inputs: [
+      {
+        internalType: "address",
+        name: "registrationContract_",
+        type: "address",
+      },
       {
         internalType: "uint256",
         name: "documentNullifier_",
@@ -255,6 +296,11 @@ const _abi = [
   {
     inputs: [
       {
+        internalType: "address",
+        name: "registrationContract_",
+        type: "address",
+      },
+      {
         internalType: "uint256",
         name: "documentNullifier_",
         type: "uint256",
@@ -266,6 +312,92 @@ const _abi = [
         internalType: "bool",
         name: "",
         type: "bool",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "issuingAuthority_",
+        type: "uint256",
+      },
+    ],
+    name: "isIssuingAuthorityBlacklisted",
+    outputs: [
+      {
+        internalType: "bool",
+        name: "",
+        type: "bool",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "issuingAuthority_",
+        type: "uint256",
+      },
+    ],
+    name: "isIssuingAuthorityWhitelisted",
+    outputs: [
+      {
+        internalType: "bool",
+        name: "",
+        type: "bool",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "offset_",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "limit_",
+        type: "uint256",
+      },
+    ],
+    name: "listIssuingAuthorityBlacklist",
+    outputs: [
+      {
+        internalType: "uint256[]",
+        name: "",
+        type: "uint256[]",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "offset_",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "limit_",
+        type: "uint256",
+      },
+    ],
+    name: "listIssuingAuthorityWhitelist",
+    outputs: [
+      {
+        internalType: "uint256[]",
+        name: "",
+        type: "uint256[]",
       },
     ],
     stateMutability: "view",

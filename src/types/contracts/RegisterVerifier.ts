@@ -132,11 +132,17 @@ export declare namespace IBaseVerifier {
 export interface RegisterVerifierInterface extends utils.Interface {
   functions: {
     "REGISTER_PROOF_QUERY_ID()": FunctionFragment;
-    "__RegisterVerifier_init(address)": FunctionFragment;
+    "__RegisterVerifier_init(address,uint256[],uint256[])": FunctionFragment;
+    "countIssuingAuthorityBlacklist()": FunctionFragment;
+    "countIssuingAuthorityWhitelist()": FunctionFragment;
     "getAllowedIssuers(uint256)": FunctionFragment;
-    "getRegisterProofInfo(uint256)": FunctionFragment;
+    "getRegisterProofInfo(address,uint256)": FunctionFragment;
     "isAllowedIssuer(uint256,uint256)": FunctionFragment;
-    "isIdentityRegistered(uint256)": FunctionFragment;
+    "isIdentityRegistered(address,uint256)": FunctionFragment;
+    "isIssuingAuthorityBlacklisted(uint256)": FunctionFragment;
+    "isIssuingAuthorityWhitelisted(uint256)": FunctionFragment;
+    "listIssuingAuthorityBlacklist(uint256,uint256)": FunctionFragment;
+    "listIssuingAuthorityWhitelist(uint256,uint256)": FunctionFragment;
     "owner()": FunctionFragment;
     "proveRegistration(((uint256,uint256,uint256,bytes32[]),uint256[],uint256[2],uint256[2][2],uint256[2]),((uint256,uint256,bytes32),address))": FunctionFragment;
     "proxiableUUID()": FunctionFragment;
@@ -154,10 +160,16 @@ export interface RegisterVerifierInterface extends utils.Interface {
     nameOrSignatureOrTopic:
       | "REGISTER_PROOF_QUERY_ID"
       | "__RegisterVerifier_init"
+      | "countIssuingAuthorityBlacklist"
+      | "countIssuingAuthorityWhitelist"
       | "getAllowedIssuers"
       | "getRegisterProofInfo"
       | "isAllowedIssuer"
       | "isIdentityRegistered"
+      | "isIssuingAuthorityBlacklisted"
+      | "isIssuingAuthorityWhitelisted"
+      | "listIssuingAuthorityBlacklist"
+      | "listIssuingAuthorityWhitelist"
       | "owner"
       | "proveRegistration"
       | "proxiableUUID"
@@ -177,7 +189,15 @@ export interface RegisterVerifierInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "__RegisterVerifier_init",
-    values: [string]
+    values: [string, BigNumberish[], BigNumberish[]]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "countIssuingAuthorityBlacklist",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "countIssuingAuthorityWhitelist",
+    values?: undefined
   ): string;
   encodeFunctionData(
     functionFragment: "getAllowedIssuers",
@@ -185,7 +205,7 @@ export interface RegisterVerifierInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "getRegisterProofInfo",
-    values: [BigNumberish]
+    values: [string, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "isAllowedIssuer",
@@ -193,7 +213,23 @@ export interface RegisterVerifierInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "isIdentityRegistered",
+    values: [string, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "isIssuingAuthorityBlacklisted",
     values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "isIssuingAuthorityWhitelisted",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "listIssuingAuthorityBlacklist",
+    values: [BigNumberish, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "listIssuingAuthorityWhitelist",
+    values: [BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(functionFragment: "owner", values?: undefined): string;
   encodeFunctionData(
@@ -250,6 +286,14 @@ export interface RegisterVerifierInterface extends utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
+    functionFragment: "countIssuingAuthorityBlacklist",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "countIssuingAuthorityWhitelist",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "getAllowedIssuers",
     data: BytesLike
   ): Result;
@@ -263,6 +307,22 @@ export interface RegisterVerifierInterface extends utils.Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "isIdentityRegistered",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "isIssuingAuthorityBlacklisted",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "isIssuingAuthorityWhitelisted",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "listIssuingAuthorityBlacklist",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "listIssuingAuthorityWhitelist",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
@@ -411,8 +471,18 @@ export interface RegisterVerifier extends BaseContract {
 
     __RegisterVerifier_init(
       zkpQueriesStorage_: string,
+      issuingAuthorityWhitelist_: BigNumberish[],
+      issuingAuthorityBlacklist_: BigNumberish[],
       overrides?: Overrides & { from?: string }
     ): Promise<ContractTransaction>;
+
+    countIssuingAuthorityBlacklist(
+      overrides?: CallOverrides
+    ): Promise<[BigNumber]>;
+
+    countIssuingAuthorityWhitelist(
+      overrides?: CallOverrides
+    ): Promise<[BigNumber]>;
 
     getAllowedIssuers(
       schema_: BigNumberish,
@@ -420,6 +490,7 @@ export interface RegisterVerifier extends BaseContract {
     ): Promise<[BigNumber[]]>;
 
     getRegisterProofInfo(
+      registrationContract_: string,
       documentNullifier_: BigNumberish,
       overrides?: CallOverrides
     ): Promise<[IRegisterVerifier.RegisterProofInfoStructOutput]>;
@@ -431,9 +502,32 @@ export interface RegisterVerifier extends BaseContract {
     ): Promise<[boolean]>;
 
     isIdentityRegistered(
+      registrationContract_: string,
       documentNullifier_: BigNumberish,
       overrides?: CallOverrides
     ): Promise<[boolean]>;
+
+    isIssuingAuthorityBlacklisted(
+      issuingAuthority_: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<[boolean]>;
+
+    isIssuingAuthorityWhitelisted(
+      issuingAuthority_: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<[boolean]>;
+
+    listIssuingAuthorityBlacklist(
+      offset_: BigNumberish,
+      limit_: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<[BigNumber[]]>;
+
+    listIssuingAuthorityWhitelist(
+      offset_: BigNumberish,
+      limit_: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<[BigNumber[]]>;
 
     owner(overrides?: CallOverrides): Promise<[string]>;
 
@@ -491,8 +585,14 @@ export interface RegisterVerifier extends BaseContract {
 
   __RegisterVerifier_init(
     zkpQueriesStorage_: string,
+    issuingAuthorityWhitelist_: BigNumberish[],
+    issuingAuthorityBlacklist_: BigNumberish[],
     overrides?: Overrides & { from?: string }
   ): Promise<ContractTransaction>;
+
+  countIssuingAuthorityBlacklist(overrides?: CallOverrides): Promise<BigNumber>;
+
+  countIssuingAuthorityWhitelist(overrides?: CallOverrides): Promise<BigNumber>;
 
   getAllowedIssuers(
     schema_: BigNumberish,
@@ -500,6 +600,7 @@ export interface RegisterVerifier extends BaseContract {
   ): Promise<BigNumber[]>;
 
   getRegisterProofInfo(
+    registrationContract_: string,
     documentNullifier_: BigNumberish,
     overrides?: CallOverrides
   ): Promise<IRegisterVerifier.RegisterProofInfoStructOutput>;
@@ -511,9 +612,32 @@ export interface RegisterVerifier extends BaseContract {
   ): Promise<boolean>;
 
   isIdentityRegistered(
+    registrationContract_: string,
     documentNullifier_: BigNumberish,
     overrides?: CallOverrides
   ): Promise<boolean>;
+
+  isIssuingAuthorityBlacklisted(
+    issuingAuthority_: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<boolean>;
+
+  isIssuingAuthorityWhitelisted(
+    issuingAuthority_: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<boolean>;
+
+  listIssuingAuthorityBlacklist(
+    offset_: BigNumberish,
+    limit_: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<BigNumber[]>;
+
+  listIssuingAuthorityWhitelist(
+    offset_: BigNumberish,
+    limit_: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<BigNumber[]>;
 
   owner(overrides?: CallOverrides): Promise<string>;
 
@@ -571,8 +695,18 @@ export interface RegisterVerifier extends BaseContract {
 
     __RegisterVerifier_init(
       zkpQueriesStorage_: string,
+      issuingAuthorityWhitelist_: BigNumberish[],
+      issuingAuthorityBlacklist_: BigNumberish[],
       overrides?: CallOverrides
     ): Promise<void>;
+
+    countIssuingAuthorityBlacklist(
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    countIssuingAuthorityWhitelist(
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
 
     getAllowedIssuers(
       schema_: BigNumberish,
@@ -580,6 +714,7 @@ export interface RegisterVerifier extends BaseContract {
     ): Promise<BigNumber[]>;
 
     getRegisterProofInfo(
+      registrationContract_: string,
       documentNullifier_: BigNumberish,
       overrides?: CallOverrides
     ): Promise<IRegisterVerifier.RegisterProofInfoStructOutput>;
@@ -591,9 +726,32 @@ export interface RegisterVerifier extends BaseContract {
     ): Promise<boolean>;
 
     isIdentityRegistered(
+      registrationContract_: string,
       documentNullifier_: BigNumberish,
       overrides?: CallOverrides
     ): Promise<boolean>;
+
+    isIssuingAuthorityBlacklisted(
+      issuingAuthority_: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<boolean>;
+
+    isIssuingAuthorityWhitelisted(
+      issuingAuthority_: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<boolean>;
+
+    listIssuingAuthorityBlacklist(
+      offset_: BigNumberish,
+      limit_: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber[]>;
+
+    listIssuingAuthorityWhitelist(
+      offset_: BigNumberish,
+      limit_: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber[]>;
 
     owner(overrides?: CallOverrides): Promise<string>;
 
@@ -690,7 +848,17 @@ export interface RegisterVerifier extends BaseContract {
 
     __RegisterVerifier_init(
       zkpQueriesStorage_: string,
+      issuingAuthorityWhitelist_: BigNumberish[],
+      issuingAuthorityBlacklist_: BigNumberish[],
       overrides?: Overrides & { from?: string }
+    ): Promise<BigNumber>;
+
+    countIssuingAuthorityBlacklist(
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    countIssuingAuthorityWhitelist(
+      overrides?: CallOverrides
     ): Promise<BigNumber>;
 
     getAllowedIssuers(
@@ -699,6 +867,7 @@ export interface RegisterVerifier extends BaseContract {
     ): Promise<BigNumber>;
 
     getRegisterProofInfo(
+      registrationContract_: string,
       documentNullifier_: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
@@ -710,7 +879,30 @@ export interface RegisterVerifier extends BaseContract {
     ): Promise<BigNumber>;
 
     isIdentityRegistered(
+      registrationContract_: string,
       documentNullifier_: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    isIssuingAuthorityBlacklisted(
+      issuingAuthority_: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    isIssuingAuthorityWhitelisted(
+      issuingAuthority_: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    listIssuingAuthorityBlacklist(
+      offset_: BigNumberish,
+      limit_: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    listIssuingAuthorityWhitelist(
+      offset_: BigNumberish,
+      limit_: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
@@ -773,7 +965,17 @@ export interface RegisterVerifier extends BaseContract {
 
     __RegisterVerifier_init(
       zkpQueriesStorage_: string,
+      issuingAuthorityWhitelist_: BigNumberish[],
+      issuingAuthorityBlacklist_: BigNumberish[],
       overrides?: Overrides & { from?: string }
+    ): Promise<PopulatedTransaction>;
+
+    countIssuingAuthorityBlacklist(
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    countIssuingAuthorityWhitelist(
+      overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
     getAllowedIssuers(
@@ -782,6 +984,7 @@ export interface RegisterVerifier extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     getRegisterProofInfo(
+      registrationContract_: string,
       documentNullifier_: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
@@ -793,7 +996,30 @@ export interface RegisterVerifier extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     isIdentityRegistered(
+      registrationContract_: string,
       documentNullifier_: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    isIssuingAuthorityBlacklisted(
+      issuingAuthority_: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    isIssuingAuthorityWhitelisted(
+      issuingAuthority_: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    listIssuingAuthorityBlacklist(
+      offset_: BigNumberish,
+      limit_: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    listIssuingAuthorityWhitelist(
+      offset_: BigNumberish,
+      limit_: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 

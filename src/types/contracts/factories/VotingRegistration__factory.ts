@@ -424,6 +424,25 @@ const _abi = [
   {
     inputs: [
       {
+        internalType: "uint256",
+        name: "documentNullifier_",
+        type: "uint256",
+      },
+    ],
+    name: "isUserRegistered",
+    outputs: [
+      {
+        internalType: "bool",
+        name: "",
+        type: "bool",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
         components: [
           {
             components: [

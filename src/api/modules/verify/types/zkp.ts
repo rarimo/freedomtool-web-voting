@@ -2,48 +2,12 @@ import { ClaimTypes } from '@/api/modules/verify/enums'
 
 export type ProofRequestResponse = {
   [ClaimTypes.Registration]: {
-    type: ClaimTypes.Registration
-    data: {
-      proveIdentityParams: {
-        issuingAuthority: string
-        documentNullifier: string
-        commitment: string
-      }
-      registerProofParams: {
-        a: string[]
-        b: [[string, string], [string, string]]
-        c: [string, string]
-        inputs: string[]
-        statesMerkleData: {
-          merkleProof: string[]
-          createdAtTimestamp: string
-          issuerState: string
-          issuerId: string
-        }
-      }
-    }
+    calldata: string
+    document_nullifier: string
   }
   [ClaimTypes.Voting]: {
-    type: ClaimTypes.Voting
-    data: {
-      proveIdentityParams: {
-        issuingAuthority: string
-        documentNullifier: string
-        commitment: string
-      }
-      registerProofParams: {
-        a: string[]
-        b: [[string, string], [string, string]]
-        c: [string, string]
-        inputs: string[]
-        statesMerkleData: {
-          merkleProof: string[]
-          createdAtTimestamp: string
-          issuerState: string
-          issuerId: string
-        }
-      }
-    }
+    calldata: string
+    document_nullifier: string
   }
 }
 
@@ -58,6 +22,9 @@ export type ClaimTypesMapOnChain = {
   [ClaimTypes.Voting]: {
     type: ClaimTypes.Voting
     data: {
+      registration_address: string
+      voting_address: string
+      choice: string
       metadata_url: string
       // callback: string
     }

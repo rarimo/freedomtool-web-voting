@@ -233,6 +233,7 @@ export interface VotingRegistrationInterface extends utils.Interface {
     "getRegistrationStatus()": FunctionFragment;
     "getRoot()": FunctionFragment;
     "isRootExists(bytes32)": FunctionFragment;
+    "isUserRegistered(uint256)": FunctionFragment;
     "register(((uint256,uint256,uint256,bytes32[]),uint256[],uint256[2],uint256[2][2],uint256[2]),(uint256,uint256,bytes32),(bytes32,(uint256,uint256),bytes),bool)": FunctionFragment;
     "registerVerifier()": FunctionFragment;
     "registrationInfo()": FunctionFragment;
@@ -250,6 +251,7 @@ export interface VotingRegistrationInterface extends utils.Interface {
       | "getRegistrationStatus"
       | "getRoot"
       | "isRootExists"
+      | "isUserRegistered"
       | "register"
       | "registerVerifier"
       | "registrationInfo"
@@ -282,6 +284,10 @@ export interface VotingRegistrationInterface extends utils.Interface {
   encodeFunctionData(
     functionFragment: "isRootExists",
     values: [BytesLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "isUserRegistered",
+    values: [BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "register",
@@ -333,6 +339,10 @@ export interface VotingRegistrationInterface extends utils.Interface {
   decodeFunctionResult(functionFragment: "getRoot", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "isRootExists",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "isUserRegistered",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "register", data: BytesLike): Result;
@@ -456,6 +466,11 @@ export interface VotingRegistration extends BaseContract {
       overrides?: CallOverrides
     ): Promise<[boolean]>;
 
+    isUserRegistered(
+      documentNullifier_: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<[boolean]>;
+
     register(
       proveIdentityParams_: IBaseVerifier.ProveIdentityParamsStruct,
       registerProofParams_: IRegisterVerifier.RegisterProofParamsStruct,
@@ -515,6 +530,11 @@ export interface VotingRegistration extends BaseContract {
 
   isRootExists(root: BytesLike, overrides?: CallOverrides): Promise<boolean>;
 
+  isUserRegistered(
+    documentNullifier_: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<boolean>;
+
   register(
     proveIdentityParams_: IBaseVerifier.ProveIdentityParamsStruct,
     registerProofParams_: IRegisterVerifier.RegisterProofParamsStruct,
@@ -570,6 +590,11 @@ export interface VotingRegistration extends BaseContract {
     getRoot(overrides?: CallOverrides): Promise<string>;
 
     isRootExists(root: BytesLike, overrides?: CallOverrides): Promise<boolean>;
+
+    isUserRegistered(
+      documentNullifier_: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<boolean>;
 
     register(
       proveIdentityParams_: IBaseVerifier.ProveIdentityParamsStruct,
@@ -651,6 +676,11 @@ export interface VotingRegistration extends BaseContract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
+    isUserRegistered(
+      documentNullifier_: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     register(
       proveIdentityParams_: IBaseVerifier.ProveIdentityParamsStruct,
       registerProofParams_: IRegisterVerifier.RegisterProofParamsStruct,
@@ -704,6 +734,11 @@ export interface VotingRegistration extends BaseContract {
 
     isRootExists(
       root: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    isUserRegistered(
+      documentNullifier_: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
