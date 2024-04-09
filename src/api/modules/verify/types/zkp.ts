@@ -8,6 +8,7 @@ export type ProofRequestResponse = {
   [ClaimTypes.Voting]: {
     calldata: string
     document_nullifier: string
+    nullifier: string
   }
 }
 

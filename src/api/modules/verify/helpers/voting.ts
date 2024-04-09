@@ -13,11 +13,12 @@ export const signUpForVoting = async (txData: string) => {
   })
 }
 
-export const vote = async (registrationAddress: string, txData: string) => {
+export const vote = async (registrationAddress: string, votingAddress: string, txData: string) => {
   return api.post('/integrations/proof-verification-relayer/v1/vote', {
     body: {
       data: {
         registration: registrationAddress,
+        voting: votingAddress,
         tx_data: txData,
       },
     },

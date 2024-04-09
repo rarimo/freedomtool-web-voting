@@ -1,5 +1,5 @@
 import { time } from '@distributedlab/tools'
-import { providers } from 'ethers'
+import { ethers, providers } from 'ethers'
 import { useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -7,7 +7,7 @@ import { AppVoting } from '@/api/modules/verify'
 import { useWeb3Context } from '@/contexts'
 import { formatDateDiff } from '@/helpers'
 import { useVotingsContext } from '@/pages/Votings/contexts'
-import { VotingRegistration__factory } from '@/types'
+import { Voting__factory, VotingRegistration__factory } from '@/types'
 
 export const useAppVotingDetails = (pairIdOrInstance: string | AppVoting) => {
   const { appVotings } = useVotingsContext()
@@ -114,6 +114,24 @@ export const useAppVotingDetails = (pairIdOrInstance: string | AppVoting) => {
     [appVoting, provider?.rawProvider],
   )
 
+  const getIsUserVoted = useCallback(
+    (nullifier: string) => {
+      if (!provider?.rawProvider) throw new TypeError('Provider is not connected')
+
+      if (!appVoting?.voting?.contract_address) throw new TypeError('Voting contract is not found')
+
+      const registrationInstance = Voting__factory.connect(
+        appVoting?.voting?.contract_address,
+        provider.rawProvider as unknown as providers.JsonRpcProvider,
+      )
+
+      return registrationInstance.nullifiers(
+        ethers.utils.arrayify(ethers.BigNumber.from(nullifier).toHexString()),
+      )
+    },
+    [appVoting, provider?.rawProvider],
+  )
+
   return {
     pairId,
 
@@ -125,6 +143,8 @@ export const useAppVotingDetails = (pairIdOrInstance: string | AppVoting) => {
 
     appVotingDesc,
     endTimerMessage,
+
     getIsUserRegistered,
+    getIsUserVoted,
   }
 }

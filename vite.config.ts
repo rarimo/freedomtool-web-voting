@@ -95,7 +95,13 @@ export default defineConfig(({ mode }) => {
         plugins: [
           // Enable rollup polyfills plugin
           // used during production bundling
-          nodePolyfills(),
+          nodePolyfills({
+            globals: {
+              Buffer: true,
+              global: true,
+              process: true,
+            },
+          }),
         ],
       },
     },

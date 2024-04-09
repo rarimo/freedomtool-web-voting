@@ -2,6 +2,7 @@ import { config } from '@config'
 import { Poseidon } from '@iden3/js-crypto'
 import { Token } from '@iden3/js-jwz'
 import { BytesLike, utils } from 'ethers'
+import get from 'lodash/get'
 import { groth16 } from 'snarkjs'
 
 import { api } from '@/api/clients'
@@ -155,12 +156,10 @@ export const subscribeToAppRequestResponse = <T extends ClaimTypes>(
 
       callback(payload, () => clearInterval(intervalId))
     } catch (error) {
-      // if (get(error, 'code') === HTTP_STATUS_CODES.NOT_FOUND) {
-      //
-      //
-      //   continue
-      // }
-      // throw error
+      if (get(error, 'code') === 429) {
+        clearInterval(intervalId)
+        throw new Error('Too many requests')
+      }
     }
   }, 3_000)
 

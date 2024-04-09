@@ -23,6 +23,7 @@
     "commitment-start-timer": "Регистрация начнётся через {{startTime}}",
     "commitment-end-timer": "Регистрация закончится через {{endTime}}",
     "commitment-results-timer": "Регистрация закончилась",
+    "voting-start-timer": "Голосование начнётся {{startTime}}",
     "voting-end-timer": "Голосование закончится через {{endTime}}"
   }
 }

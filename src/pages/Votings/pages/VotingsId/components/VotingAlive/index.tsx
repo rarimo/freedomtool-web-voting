@@ -1,4 +1,4 @@
-import { alpha, Button, Paper, Stack, StackProps, Typography, useTheme } from '@mui/material'
+import { Alert, alpha, Button, Paper, Stack, StackProps, Typography, useTheme } from '@mui/material'
 import { useCallback, useState } from 'react'
 
 import { AppVoting, ClaimTypes, ProofRequestResponse, vote } from '@/api/modules/verify'
@@ -23,8 +23,9 @@ export default function VotingAlive({ appVoting, ...rest }: Props) {
 
   const [isAppRequestModalShown, setIsAppRequestModalShown] = useState(false)
   const [isPending, setIsPending] = useState(false)
+  const [isUserVoted, setIsUserVoted] = useState(false)
 
-  const { getIsUserRegistered } = useAppVotingDetails(appVoting)
+  const { getIsUserRegistered, getIsUserVoted } = useAppVotingDetails(appVoting)
 
   const [selectedCandidateHash, setSelectedCandidateHash] = useState<string>('')
 
@@ -41,45 +42,71 @@ export default function VotingAlive({ appVoting, ...rest }: Props) {
 
   const voteForCandidate = useCallback(
     async (proofResponse: ProofRequestResponse[ClaimTypes.Voting]) => {
-      setIsPending(true)
-
       try {
         if (!appVoting.voting?.contract_address)
           throw new TypeError('Voting contract address is not set')
 
         if (!provider?.rawProvider) throw new TypeError('Provider is not connected')
 
-        if (!(await getIsUserRegistered(proofResponse.document_nullifier))) {
+        const isUserRegistered = await getIsUserRegistered(proofResponse.document_nullifier)
+        const isUserVoted = await getIsUserVoted(proofResponse.nullifier)
+
+        if (!isUserRegistered) {
           bus.emit(BusEvents.error, {
             message: 'You are not not registered',
           })
-          throw new Error('User is not registered') // TODO: add notification
+          return
         }
 
-        await vote(appVoting.registration.contract_address, proofResponse.calldata)
+        if (isUserVoted) {
+          setIsUserVoted(true)
+          return
+        }
+
+        await vote(
+          appVoting.registration.contract_address,
+          appVoting.voting?.contract_address,
+          proofResponse.calldata,
+        )
+
+        bus.emit(BusEvents.success, {
+          message: 'You have successfully voted',
+        })
       } catch (error) {
         ErrorHandler.process(error)
       }
-
-      setIsPending(false)
     },
     [
-      appVoting.registration?.contract_address,
+      appVoting.registration.contract_address,
       appVoting.voting?.contract_address,
       getIsUserRegistered,
+      getIsUserVoted,
       provider?.rawProvider,
     ],
   )
 
-  const handleVote = useCallback(async () => {
-    await start(async proofResponse => {
-      await voteForCandidate(proofResponse)
+  const successHandler = useCallback(
+    async (proofResponse: ProofRequestResponse[ClaimTypes.Voting], cancelCb: () => void) => {
+      setIsPending(true)
 
       setIsAppRequestModalShown(false)
-    })
+
+      cancelCb?.()
+
+      await voteForCandidate(proofResponse)
+
+      setIsUserVoted(await getIsUserVoted(proofResponse.nullifier))
+
+      setIsPending(false)
+    },
+    [getIsUserVoted, voteForCandidate],
+  )
+
+  const handleVote = useCallback(async () => {
+    await start(successHandler)
 
     setIsAppRequestModalShown(true)
-  }, [start, voteForCandidate])
+  }, [start, successHandler])
 
   const isCandidateSelected = useCallback(
     (hash: string) => selectedCandidateHash === hash,
@@ -159,21 +186,30 @@ export default function VotingAlive({ appVoting, ...rest }: Props) {
             <NoDataViewer title='No Candidates' />
           )}
 
-          {appVoting?.voting?.candidates && (
-            <Button
-              sx={{ minWidth: spacing(40), alignSelf: 'flex-start' }}
-              onClick={handleVote}
-              disabled={isPending || !selectedCandidateHash}
-            >
-              CONFIRM
-            </Button>
+          {isUserVoted ? (
+            <Alert severity='success'>You already voted</Alert>
+          ) : (
+            <>
+              {appVoting?.voting?.candidates && (
+                <Button
+                  sx={{ minWidth: spacing(40), alignSelf: 'flex-start' }}
+                  onClick={handleVote}
+                  disabled={isPending || !selectedCandidateHash}
+                >
+                  CONFIRM
+                </Button>
+              )}
+            </>
           )}
         </Stack>
 
         <AppRequestModal
           isShown={isAppRequestModalShown}
           request={request}
-          cancel={cancelSubscription}
+          cancel={() => {
+            setIsAppRequestModalShown(false)
+            cancelSubscription()
+          }}
         />
 
         <VotingProcessModal open={isPending} />
