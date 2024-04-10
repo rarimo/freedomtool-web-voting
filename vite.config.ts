@@ -6,6 +6,7 @@ import * as path from 'path'
 import { visualizer } from 'rollup-plugin-visualizer'
 import { defineConfig, loadEnv } from 'vite'
 import { checker } from 'vite-plugin-checker'
+import { createHtmlPlugin } from 'vite-plugin-html'
 import { nodePolyfills } from 'vite-plugin-node-polyfills'
 import { createSvgIconsPlugin } from 'vite-plugin-svg-icons'
 import tsconfigPaths from 'vite-tsconfig-paths'
@@ -20,7 +21,7 @@ export default defineConfig(({ mode }) => {
 
   // const isProduction = env.VITE_ENVIRONMENT === 'production'
   // const isDevelopment = env.VITE_ENVIRONMENT === 'development'
-  const isAnalyze = env.VITE_ENVIRONMENT === 'analyze'
+  const isAnalyze = env.VITE_ENVIRONMENT === 'analyze' || env.VITE_MODE === 'analyze'
   // const buildVersion = env.VITE_APP_BUILD_VERSION
 
   return {
@@ -52,6 +53,15 @@ export default defineConfig(({ mode }) => {
           lintCommand: 'eslint "{src,config}/**/*.{jsx,tsx}" --cache --max-warnings=0',
         },
       }),
+      createHtmlPlugin({
+        minify: true,
+        entry: '/src/main.tsx',
+        inject: {
+          data: {
+            host: env.VITE_APP_DOMAIN,
+          },
+        },
+      }),
       ...(isAnalyze
         ? [
             visualizer({
@@ -67,10 +77,6 @@ export default defineConfig(({ mode }) => {
         '@': `${root}/`,
         '@config': `${root}/config.ts`,
         '@static': `${root}/../static`,
-
-        util: path.resolve(__dirname, 'node_modules/util/util.js'),
-        ejc: path.resolve(__dirname, 'node_modules/ejs/ejs.min.js'),
-        snarkjs: path.resolve(__dirname, 'node_modules/snarkjs/build/browser.esm.js'),
       },
     },
     optimizeDeps: {
@@ -89,7 +95,6 @@ export default defineConfig(({ mode }) => {
       ],
     },
     build: {
-      sourcemap: true,
       target: 'esnext',
       rollupOptions: {
         plugins: [
@@ -101,8 +106,26 @@ export default defineConfig(({ mode }) => {
               global: true,
               process: true,
             },
+            protocolImports: true,
           }),
         ],
+
+        output: {
+          sourcemap: true,
+
+          manualChunks: {
+            lodash: ['lodash'],
+            react: ['react', 'react-dom'],
+            'bn.js': ['bn.js'],
+            '@ethersproject/constants': ['@ethersproject/constants'],
+            '@ethersproject/logger': ['@ethersproject/logger'],
+            '@ethersproject/bytes': ['@ethersproject/bytes'],
+            '@ethersproject/bignumber': ['@ethersproject/bignumber'],
+            '@ethersproject/abstract-provider': ['@ethersproject/abstract-provider'],
+            '@ethersproject/abstract-signer': ['@ethersproject/abstract-signer'],
+            '@ethersproject/providers': ['@ethersproject/providers'],
+          },
+        },
       },
     },
   }

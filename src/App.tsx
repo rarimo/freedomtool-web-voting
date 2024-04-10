@@ -1,8 +1,7 @@
 import { CircularProgress, CssBaseline, Stack, ThemeProvider } from '@mui/material'
 import { FC, HTMLAttributes, memo, useCallback, useEffect, useMemo, useState } from 'react'
 
-import { ToastsManager, useWeb3Context } from '@/contexts'
-import { ErrorHandler } from '@/helpers'
+import { ToastsManager } from '@/contexts'
 import { useViewportSizes } from '@/hooks'
 import { AppRoutes } from '@/routes'
 import { useUiState } from '@/store'
@@ -11,21 +10,13 @@ import { createTheme } from '@/theme'
 const App: FC<HTMLAttributes<HTMLDivElement>> = () => {
   const [isAppInitialized, setIsAppInitialized] = useState(false)
 
-  const { init: initWeb3Provider } = useWeb3Context()
   const { paletteMode } = useUiState()
 
   useViewportSizes()
 
   const init = useCallback(async () => {
-    try {
-      /* empty */
-      await initWeb3Provider()
-    } catch (error) {
-      ErrorHandler.processWithoutFeedback(error)
-    }
-
     setIsAppInitialized(true)
-  }, [initWeb3Provider])
+  }, [])
 
   const theme = useMemo(() => createTheme(paletteMode), [paletteMode])
 

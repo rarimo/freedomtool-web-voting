@@ -3,7 +3,6 @@ import { useCallback, useState } from 'react'
 
 import { AppVoting, ClaimTypes, ProofRequestResponse, vote } from '@/api/modules/verify'
 import { NoDataViewer } from '@/common'
-import { useWeb3Context } from '@/contexts'
 import { BusEvents } from '@/enums'
 import { bus, ErrorHandler, formatDateDMY } from '@/helpers'
 import { useAppRequest, useAppVotingDetails } from '@/pages/Votings/hooks'
@@ -18,8 +17,6 @@ type Props = StackProps & {
 
 export default function VotingAlive({ appVoting, ...rest }: Props) {
   const { palette, spacing } = useTheme()
-
-  const { provider } = useWeb3Context()
 
   const [isAppRequestModalShown, setIsAppRequestModalShown] = useState(false)
   const [isPending, setIsPending] = useState(false)
@@ -45,8 +42,6 @@ export default function VotingAlive({ appVoting, ...rest }: Props) {
       try {
         if (!appVoting.voting?.contract_address)
           throw new TypeError('Voting contract address is not set')
-
-        if (!provider?.rawProvider) throw new TypeError('Provider is not connected')
 
         const isUserRegistered = await getIsUserRegistered(proofResponse.document_nullifier)
         const isUserVoted = await getIsUserVoted(proofResponse.nullifier)
@@ -81,7 +76,6 @@ export default function VotingAlive({ appVoting, ...rest }: Props) {
       appVoting.voting?.contract_address,
       getIsUserRegistered,
       getIsUserVoted,
-      provider?.rawProvider,
     ],
   )
 

@@ -1,17 +1,21 @@
 import { time } from '@distributedlab/tools'
-import { ethers, providers } from 'ethers'
+import { BigNumber } from '@ethersproject/bignumber'
+import { arrayify } from '@ethersproject/bytes'
 import { useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { AppVoting } from '@/api/modules/verify'
-import { useWeb3Context } from '@/contexts'
+import {
+  createVotingContract,
+  createVotingRegistrationContract,
+} from '@/api/modules/verify/helpers/contracts'
 import { formatDateDiff } from '@/helpers'
 import { useVotingsContext } from '@/pages/Votings/contexts'
-import { Voting__factory, VotingRegistration__factory } from '@/types'
+import { useWeb3State } from '@/store'
 
 export const useAppVotingDetails = (pairIdOrInstance: string | AppVoting) => {
   const { appVotings } = useVotingsContext()
-  const { provider } = useWeb3Context()
+  const { provider } = useWeb3State()
 
   const { t } = useTranslation()
 
@@ -100,36 +104,32 @@ export const useAppVotingDetails = (pairIdOrInstance: string | AppVoting) => {
 
   const getIsUserRegistered = useCallback(
     async (documentNullifier: string) => {
-      if (!provider?.rawProvider) throw new TypeError('Provider is not connected')
-
       if (!appVoting) throw new TypeError('Voting is not found')
 
-      const registrationInstance = VotingRegistration__factory.connect(
+      const registrationInstance = createVotingRegistrationContract(
         appVoting.registration.contract_address,
-        provider.rawProvider as unknown as providers.JsonRpcProvider,
+        provider?.rawProvider,
       )
 
-      return registrationInstance.isUserRegistered(documentNullifier)
+      return registrationInstance.contractInstance.isUserRegistered(documentNullifier)
     },
     [appVoting, provider?.rawProvider],
   )
 
   const getIsUserVoted = useCallback(
     (nullifier: string) => {
-      if (!provider?.rawProvider) throw new TypeError('Provider is not connected')
-
       if (!appVoting?.voting?.contract_address) throw new TypeError('Voting contract is not found')
 
-      const registrationInstance = Voting__factory.connect(
+      const registrationInstance = createVotingContract(
         appVoting?.voting?.contract_address,
-        provider.rawProvider as unknown as providers.JsonRpcProvider,
+        provider?.rawProvider,
       )
 
-      return registrationInstance.nullifiers(
-        ethers.utils.arrayify(ethers.BigNumber.from(nullifier).toHexString()),
+      return registrationInstance.contractInstance.nullifiers(
+        arrayify(BigNumber.from(nullifier).toHexString()),
       )
     },
-    [appVoting, provider?.rawProvider],
+    [appVoting?.voting?.contract_address, provider?.rawProvider],
   )
 
   return {

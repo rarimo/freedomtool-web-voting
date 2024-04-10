@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react'
-import { createBrowserRouter, Navigate, Outlet, RouterProvider } from 'react-router-dom'
+import { createHashRouter, Navigate, Outlet, RouterProvider } from 'react-router-dom'
 
 import { RoutePaths } from '@/enums'
 
@@ -9,7 +9,7 @@ import PublicLayout from './layouts/PublicLayout'
 export const AppRoutes = () => {
   const Votings = lazy(() => import('@/pages/Votings'))
 
-  const router = createBrowserRouter([
+  const router = createHashRouter([
     {
       path: RoutePaths.Root,
       element: (
