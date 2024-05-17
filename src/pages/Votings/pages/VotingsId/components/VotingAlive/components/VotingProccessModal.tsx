@@ -3,29 +3,36 @@ import { ComponentProps, useState } from 'react'
 import { useEffectOnce } from 'react-use'
 
 import { sleep } from '@/helpers'
+import { useTranslate } from '@/hooks/translate'
 import { UiIcon, UiModal } from '@/ui'
 
 type Props = Omit<ComponentProps<typeof UiModal>, 'children'>
 
+enum ProcessingStatuses {
+  Loading = 'loading',
+  Done = 'done',
+}
+
 export default function VotingProcessModal({ ...rest }: Props) {
+  const { t } = useTranslate()
   const { palette, spacing } = useTheme()
 
   const [steps, setSteps] = useState([
     {
-      title: 'Formation of the Survey',
-      status: 'loading',
+      title: t('voting-process-modal.step-1-title'),
+      status: ProcessingStatuses.Loading,
     },
     {
-      title: 'Anonymization',
-      status: 'loading',
+      title: t('voting-process-modal.step-2-title'),
+      status: ProcessingStatuses.Loading,
     },
     {
-      title: 'Sending your choice',
-      status: 'loading',
+      title: t('voting-process-modal.step-3-title'),
+      status: ProcessingStatuses.Loading,
     },
     {
-      title: 'Finalizing',
-      status: 'loading',
+      title: t('voting-process-modal.step-4-title'),
+      status: ProcessingStatuses.Loading,
     },
   ])
 
@@ -36,7 +43,7 @@ export default function VotingProcessModal({ ...rest }: Props) {
         setSteps(prev => {
           const newSteps = [...prev]
 
-          newSteps[prev.indexOf(step)].status = 'done'
+          newSteps[prev.indexOf(step)].status = ProcessingStatuses.Done
 
           return newSteps
         })
@@ -70,8 +77,8 @@ export default function VotingProcessModal({ ...rest }: Props) {
               <UiIcon componentName='check' size={10} sx={{ color: palette.common.white }} />
             </Box>
             <Stack spacing={3} alignItems='center' textAlign='center'>
-              <Typography variant='h5'>Please wait</Typography>
-              <Typography variant='body3'>Your choice is non tracable</Typography>
+              <Typography variant='h5'>{t('voting-process-modal.wait-msg')}</Typography>
+              <Typography variant='body3'>{t('voting-process-modal.sec-msg')}</Typography>
             </Stack>
 
             <Divider sx={{ alignSelf: 'stretch' }} />
@@ -82,8 +89,8 @@ export default function VotingProcessModal({ ...rest }: Props) {
                   <Typography color={palette.text.secondary} fontWeight='bold'>
                     {el.title}
                   </Typography>
-                  {el.status === 'loading' ? (
-                    <Typography>Loading...</Typography>
+                  {el.status === ProcessingStatuses.Loading ? (
+                    <Typography>{t('voting-process-modal.loading-status')}</Typography>
                   ) : (
                     <Chip
                       color='success'
@@ -98,7 +105,7 @@ export default function VotingProcessModal({ ...rest }: Props) {
                       sx={{
                         color: palette.success.darker,
                       }}
-                      label='Done'
+                      label={t('voting-process-modal.done-status')}
                     />
                   )}
                 </Stack>

@@ -1,6 +1,7 @@
 import { use } from 'i18next'
 import { initReactI18next } from 'react-i18next'
 
+import { setDayjsLocal } from '@/helpers'
 import { uiStore } from '@/store'
 
 import resources from './resources'
@@ -8,6 +9,8 @@ import resources from './resources'
 const DEFAULT_LOCALE = 'en'
 
 const locale = uiStore.locale ?? DEFAULT_LOCALE
+
+setDayjsLocal(locale)
 
 declare module 'i18next' {
   interface CustomTypeOptions {

@@ -6,7 +6,7 @@ import { type LocaleResources } from '@/locales/resources'
 type UiStore = {
   viewportWidth: number
   paletteMode: PaletteMode
-  locale: LocaleResources
+  locale?: LocaleResources
 }
 
 export const [uiStore, useUiState] = createStore(
@@ -14,7 +14,7 @@ export const [uiStore, useUiState] = createStore(
   {
     viewportWidth: 0,
     paletteMode: 'light',
-    locale: 'en',
+    locale: undefined,
   } as UiStore,
   state => ({
     setViewportWidth: (width: number) => {

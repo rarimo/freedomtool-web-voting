@@ -5,6 +5,7 @@ import { AppVoting, ClaimTypes, ProofRequestResponse, vote } from '@/api/modules
 import { NoDataViewer } from '@/common'
 import { BusEvents } from '@/enums'
 import { bus, ErrorHandler, formatDateDMY } from '@/helpers'
+import { useTranslate } from '@/hooks/translate'
 import { useAppRequest, useAppVotingDetails } from '@/pages/Votings/hooks'
 import { AppRequestModal } from '@/pages/Votings/pages/VotingsId/components'
 import { UiTooltip } from '@/ui'
@@ -16,6 +17,7 @@ type Props = StackProps & {
 }
 
 export default function VotingAlive({ appVoting, ...rest }: Props) {
+  const { t } = useTranslate()
   const { palette, spacing } = useTheme()
 
   const [isAppRequestModalShown, setIsAppRequestModalShown] = useState(false)
@@ -48,7 +50,7 @@ export default function VotingAlive({ appVoting, ...rest }: Props) {
 
         if (!isUserRegistered) {
           bus.emit(BusEvents.error, {
-            message: 'You are not not registered',
+            message: t('voting-alive.not-registered-error-msg'),
           })
           return
         }
@@ -65,7 +67,7 @@ export default function VotingAlive({ appVoting, ...rest }: Props) {
         )
 
         bus.emit(BusEvents.success, {
-          message: 'You have successfully voted',
+          message: t('voting-alive.success-msg'),
         })
       } catch (error) {
         ErrorHandler.process(error)
@@ -76,6 +78,7 @@ export default function VotingAlive({ appVoting, ...rest }: Props) {
       appVoting.voting?.contract_address,
       getIsUserRegistered,
       getIsUserVoted,
+      t,
     ],
   )
 
@@ -111,7 +114,7 @@ export default function VotingAlive({ appVoting, ...rest }: Props) {
     <Stack {...rest}>
       <Paper>
         <Stack spacing={4}>
-          <Typography>Select Answer</Typography>
+          <Typography>{t('voting-alive.select-section-lbl')}</Typography>
           {appVoting?.voting?.candidates ? (
             Object.entries(appVoting.voting.candidates).map(([hash, details], idx) => (
               <UiTooltip
@@ -120,7 +123,7 @@ export default function VotingAlive({ appVoting, ...rest }: Props) {
                 title={
                   <Stack spacing={2}>
                     <Typography>{details.description}</Typography>
-                    <Typography>Birthday: {formatDateDMY(details.birthday_date)}</Typography>
+                    <Typography>{formatDateDMY(details.birthday_date)}</Typography>
                   </Stack>
                 }
               >
@@ -177,7 +180,7 @@ export default function VotingAlive({ appVoting, ...rest }: Props) {
               </UiTooltip>
             ))
           ) : (
-            <NoDataViewer title='No Candidates' />
+            <NoDataViewer title={t('voting-alive.no-options-msg')} />
           )}
 
           {isUserVoted ? (
@@ -190,7 +193,7 @@ export default function VotingAlive({ appVoting, ...rest }: Props) {
                   onClick={handleVote}
                   disabled={isPending || !selectedCandidateHash}
                 >
-                  CONFIRM
+                  {t('voting-alive.confirm-btn')}
                 </Button>
               )}
             </>
@@ -199,6 +202,7 @@ export default function VotingAlive({ appVoting, ...rest }: Props) {
 
         <AppRequestModal
           isShown={isAppRequestModalShown}
+          title={t('voting-alive.request-modal-title')}
           request={request}
           cancel={() => {
             setIsAppRequestModalShown(false)

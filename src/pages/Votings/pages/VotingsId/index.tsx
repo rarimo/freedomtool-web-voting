@@ -4,6 +4,7 @@ import { NavLink, useParams } from 'react-router-dom'
 
 import { LangSwitcher, NoDataViewer } from '@/common'
 import { RoutePaths } from '@/enums'
+import { useTranslate } from '@/hooks/translate'
 import { useVotingsContext } from '@/pages/Votings/contexts'
 import { useAppVotingDetails } from '@/pages/Votings/hooks'
 import { UiIcon, UiMarkdown } from '@/ui'
@@ -17,6 +18,8 @@ import {
 } from './components'
 
 export default function VotingsId() {
+  const { t } = useTranslate()
+
   const { id = '' } = useParams<{ id: string }>()
 
   const { isVotingsLoading, isVotingsLoadingError } = useVotingsContext()
@@ -61,19 +64,9 @@ export default function VotingsId() {
       </Stack>
     )
 
-  if (isVotingsLoadingError)
-    return <Alert severity='error'>{`There's an error occurred, please, reload page`}</Alert>
-
-  if (!appVoting)
-    return (
-      <NoDataViewer
-        action={
-          <Button component={NavLink} to={RoutePaths.VotingsList}>
-            See all votings
-          </Button>
-        }
-      />
-    )
+  if (isVotingsLoadingError) {
+    return <Alert severity='error'>{t('votings-id.error-msg')}</Alert>
+  }
 
   return (
     <Stack spacing={4}>
@@ -85,31 +78,46 @@ export default function VotingsId() {
             variant='text'
             startIcon={<UiIcon componentName='chevronLeft' />}
           >
-            Back
+            {t('votings-id.back-btn')}
           </Button>
 
           <LangSwitcher />
         </Stack>
 
-        <Paper>
-          <Stack spacing={6}>
-            <Typography variant='h5'>{appVotingDesc?.name}</Typography>
+        {appVoting && (
+          <Paper>
+            <Stack spacing={6}>
+              <Typography variant='h5'>{appVotingDesc?.name}</Typography>
 
-            <Divider />
+              <Divider />
 
-            <Stack direction='row' spacing={2} alignItems='center'>
-              <UiIcon componentName='calendarMonth' size={4} />
-              <Typography>{endTimerMessage}</Typography>
+              <Stack direction='row' spacing={2} alignItems='center'>
+                <UiIcon componentName='calendarMonth' size={4} />
+                <Typography>{endTimerMessage}</Typography>
+              </Stack>
             </Stack>
-          </Stack>
-        </Paper>
+          </Paper>
+        )}
       </Stack>
 
-      {<VotingComponent appVoting={appVoting} />}
+      {appVoting ? (
+        <>
+          {<VotingComponent appVoting={appVoting} />}
 
-      <Paper>
-        <UiMarkdown>{appVotingDesc?.description}</UiMarkdown>
-      </Paper>
+          <Paper>
+            <UiMarkdown>{appVotingDesc?.description}</UiMarkdown>
+          </Paper>
+        </>
+      ) : (
+        <NoDataViewer
+          title={t('votings-id.empty-title')}
+          action={
+            <Button component={NavLink} to={RoutePaths.VotingsList}>
+              {t('votings-id.empty-btn')}
+            </Button>
+          }
+        />
+      )}
     </Stack>
   )
 }

@@ -3,6 +3,7 @@ import { useMemo } from 'react'
 
 import { AppVoting } from '@/api/modules/verify'
 import { Illustrations } from '@/enums'
+import { useTranslate } from '@/hooks/translate'
 import { UiIcon, UiIllustration } from '@/ui'
 
 type Props = StackProps & {
@@ -10,18 +11,36 @@ type Props = StackProps & {
 }
 
 export default function VotingRegistrationEnd({ appVoting, ...rest }: Props) {
+  const { t } = useTranslate()
   const { palette, spacing } = useTheme()
 
   const registeredAmountMsg = useMemo(() => {
+    const amount = appVoting.registration.counters.totalRegistrations.toNumber()
+
     return (
-      <Typography>
-        <Typography fontWeight='bold'>
-          {appVoting.registration.counters.totalRegistrations.toNumber()}
-        </Typography>{' '}
-        people already signed
-      </Typography>
+      <Stack spacing={2} direction='row' alignItems='center'>
+        <Chip
+          color='success'
+          label={amount}
+          icon={<UiIcon componentName='check' size={6} />}
+          sx={{
+            background: palette.success.dark,
+            color: palette.success.contrastText,
+            fontWeight: 'bold',
+            alignSelf: 'flex-start',
+          }}
+        />
+        {t('voting-registration-end.registered-users', {
+          count: amount,
+        })}
+      </Stack>
     )
-  }, [appVoting.registration.counters.totalRegistrations])
+  }, [
+    appVoting.registration.counters.totalRegistrations,
+    palette.success.contrastText,
+    palette.success.dark,
+    t,
+  ])
 
   return (
     <Stack {...rest}>
@@ -39,18 +58,6 @@ export default function VotingRegistrationEnd({ appVoting, ...rest }: Props) {
         >
           <Stack direction='row' justifyContent='space-between'>
             <Stack spacing={4}>
-              <Chip
-                color='success'
-                label='Signed'
-                icon={<UiIcon componentName='check' size={6} />}
-                sx={{
-                  background: palette.success.dark,
-                  color: palette.success.contrastText,
-                  fontWeight: 'bold',
-                  alignSelf: 'flex-start',
-                }}
-              />
-
               <Typography variant='body2' fontWeight='bold'>
                 {registeredAmountMsg}
               </Typography>

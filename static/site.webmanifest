@@ -1,6 +1,6 @@
 {
-  "name": "voting-app",
-  "short_name": "voting-app",
+  "name": "freedomtool-voting-app",
+  "short_name": "freedomtool-voting-app",
   "icons": [
     {
       "src": "/branding/android-chrome-192x192.png",

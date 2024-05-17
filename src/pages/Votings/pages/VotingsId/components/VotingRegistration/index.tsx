@@ -4,6 +4,7 @@ import { useCallback, useState } from 'react'
 import { AppVoting, ClaimTypes, ProofRequestResponse, signUpForVoting } from '@/api/modules/verify'
 import { BusEvents } from '@/enums'
 import { bus, ErrorHandler, sleep } from '@/helpers'
+import { useTranslate } from '@/hooks/translate'
 import { useAppRequest, useAppVotingDetails } from '@/pages/Votings/hooks'
 import { AppRequestModal } from '@/pages/Votings/pages/VotingsId/components'
 import { VotingProcessModal } from '@/pages/Votings/pages/VotingsId/components/VotingAlive/components'
@@ -14,6 +15,7 @@ type Props = StackProps & {
 }
 
 export default function VotingRegistration({ appVoting, ...rest }: Props) {
+  const { t } = useTranslate()
   const { palette, spacing } = useTheme()
 
   const [isAppRequestModalShown, setIsAppRequestModalShown] = useState(false)
@@ -44,7 +46,7 @@ export default function VotingRegistration({ appVoting, ...rest }: Props) {
         await signUpForVoting(proofResponse.calldata)
 
         bus.emit(BusEvents.success, {
-          message: 'You have successfully signed up for voting',
+          message: t('voting-registration.success-msg'),
         })
       } catch (error) {
         ErrorHandler.process(error)
@@ -52,7 +54,7 @@ export default function VotingRegistration({ appVoting, ...rest }: Props) {
 
       await sleep(10_000)
     },
-    [getIsUserRegistered],
+    [getIsUserRegistered, t],
   )
 
   const successHandler = useCallback(
@@ -84,12 +86,12 @@ export default function VotingRegistration({ appVoting, ...rest }: Props) {
         <Stack spacing={6}>
           <Stack direction='row' spacing={4}>
             <Typography variant='h6' fontWeight='bold'>
-              Your status:
+              {t('voting-registration.status-prefix')}
             </Typography>
 
             <Stack direction='row' alignItems='center' spacing={2} color={palette.success.dark}>
               <UiIcon componentName='checkCircle' size={4} />
-              <Typography fontWeight='bold'>You can participate</Typography>
+              <Typography fontWeight='bold'>{t('voting-registration.status-allowed')}</Typography>
             </Stack>
           </Stack>
 
@@ -102,7 +104,7 @@ export default function VotingRegistration({ appVoting, ...rest }: Props) {
                   color: palette.success.dark,
                 }}
               />
-              <Typography variant='body2'>Are a X authorised person</Typography>
+              <Typography variant='body2'>{t('voting-registration.condition-1')}</Typography>
             </Stack>
 
             <Stack direction='row' alignItems='center' spacing={2}>
@@ -113,12 +115,12 @@ export default function VotingRegistration({ appVoting, ...rest }: Props) {
                   color: palette.success.dark,
                 }}
               />
-              <Typography variant='body2'>Are 18 y.o</Typography>
+              <Typography variant='body2'>{t('voting-registration.condition-2')}</Typography>
             </Stack>
           </Stack>
 
           {isUserRegistered ? (
-            <Alert severity='success'>You are registered for voting</Alert>
+            <Alert severity='success'>{t('voting-registration.registered-alert')}</Alert>
           ) : (
             <Button
               sx={{ minWidth: spacing(80), alignSelf: 'flex-start' }}
@@ -126,7 +128,7 @@ export default function VotingRegistration({ appVoting, ...rest }: Props) {
               disabled={isPending}
               startIcon={<UiIcon componentName='personAddAlt1' />}
             >
-              SIGN UP
+              {t('voting-registration.register-btn')}
             </Button>
           )}
         </Stack>
@@ -134,6 +136,7 @@ export default function VotingRegistration({ appVoting, ...rest }: Props) {
 
       <AppRequestModal
         isShown={isAppRequestModalShown}
+        title={t('voting-registration.request-modal-title')}
         request={request}
         cancel={() => {
           setIsAppRequestModalShown(false)

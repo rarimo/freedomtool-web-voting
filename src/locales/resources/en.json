@@ -1,19 +1,4 @@
 {
-  "profile-page": {
-    "title" : "Profiles & Wallets",
-    "description": "Manage your identity credentials and Soulbound Tokens (SBTs) easily from this app",
-    "wallet": "Wallet",
-    "filter": "Filter",
-    "empty-title": "Add Credentials",
-    "empty-description": "Explore credentials marketplace with different providers "
-  },
-  "sign-in-page": {
-    "title": "Sign in",
-    "description": "Manage your identity credentials and Soulbound Tokens (SBTs) easily from this app",
-    "connect-btn": "Connect Metamask",
-    "install-btn": "Install Metamask",
-    "reload-page-btn": "Please, reload page"
-  },
   "validations": {
     "field-error_required": "Please fill out this field",
     "field-error_minLength": "This field must contain minimum {{minLength}} symbols",
@@ -41,5 +26,62 @@
     "voting-start-timer": "Voting starts {{startTime}}",
     "voting-end-timer": "Voting ends {{endTime}}",
     "voting-ended": "Voting has ended"
+  },
+  "votings-id": {
+    "error-msg": "An error occurred, please reload the page",
+    "empty-title": "No votings found",
+    "empty-btn": "See all votings",
+    "back-btn": "Back"
+  },
+  "voting-registration-end": {
+    "registered-users": "people supported",
+    "registered-users_zero": "people supported",
+    "registered-users_one": "human supported",
+    "registered-users_two": "people supported",
+    "registered-users_few": "people supported",
+    "registered-users_many": "people supported",
+    "registered-users_other": "people supported"
+  },
+  "voting-registration": {
+    "success-msg": "You have successfully supported the manifesto",
+    "status-prefix": "Your status:",
+    "status-allowed": "You can participate",
+    "condition-1": "You have condition 1",
+    "condition-2": "You have condition 2",
+    "registered-alert": "You have already supported the manifesto",
+    "register-btn": "Support",
+    "request-modal-title": "Authenticate via Freedomtool app"
+  },
+  "app-request-modal": {
+    "qr-desc": "Scan the code in the app"
+  },
+  "voting-alive": {
+    "request-modal-title": "Authenticate via Freedomtool app",
+    "success-msg": "You have successfully voted",
+    "not-registered-msg": "You are not registered",
+    "select-section-lbl": "Select Answer",
+    "no-options-msg": "No candidates",
+    "confirm-btn": "CONFIRM"
+  },
+  "voting-before-registration": {
+    "soon-msg": "Signature collection will start soon"
+  },
+  "voting-process-modal": {
+    "step-1-title": "Formation of the signature",
+    "step-2-title": "Anonymization",
+    "step-3-title": "Sending your signature",
+    "step-4-title": "Finalization",
+    "wait-msg": "Success",
+    "sec-msg": "Your signature is accounted for",
+    "loading-status": "Wait...",
+    "done-status": "Done"
+  },
+  "votings-list": {
+    "title": "Active petitions",
+    "error-msg": "An error occurred, please reload the page"
+  },
+  "lang-switcher": {
+    "ru": "Русский",
+    "en": "English"
   }
 }

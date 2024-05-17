@@ -12,7 +12,7 @@ interface Props extends StackProps {
 
 export default function NoDataViewer({
   icon = <UiIcon componentName='folderOff' />,
-  title = 'No data',
+  title = '',
   description,
   action,
   ...rest

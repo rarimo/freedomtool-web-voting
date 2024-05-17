@@ -1,17 +1,24 @@
 import { Alert, Paper, Stack } from '@mui/material'
+import { useMemo } from 'react'
 
 import { LangSwitcher, NoDataViewer, PageTitles } from '@/common'
+import { useTranslate } from '@/hooks/translate'
 import { useVotingsContext } from '@/pages/Votings/contexts'
 
 import { VotingListCard, VotingListCardSkeleton } from './components'
 
 export default function VotingsList() {
+  const { t } = useTranslate()
   const { appVotings, isVotingsLoading, isVotingsLoadingError } = useVotingsContext()
+
+  const sortedAppVotings = useMemo(() => {
+    return appVotings
+  }, [appVotings])
 
   return (
     <Stack p={4}>
       <Stack direction='row' justifyContent='space-between' alignItems='center'>
-        <PageTitles title={'Active Polls'} />
+        <PageTitles title={t('votings-list.title')} />
         <LangSwitcher />
       </Stack>
 
@@ -25,10 +32,10 @@ export default function VotingsList() {
           </Paper>
         </Stack>
       ) : isVotingsLoadingError ? (
-        <Alert severity='error'>{`There's an error occurred, please, reload page`}</Alert>
-      ) : appVotings.length ? (
+        <Alert severity='error'>{t('votings-list.error-msg')}</Alert>
+      ) : sortedAppVotings.length ? (
         <Stack mt={6} spacing={6}>
-          {appVotings.map((appVoting, idx) => (
+          {sortedAppVotings.map((appVoting, idx) => (
             <Paper key={idx}>
               <VotingListCard appVoting={appVoting} />
             </Paper>
